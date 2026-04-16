@@ -223,6 +223,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="tab" data-tab="artilharia" onclick="switchTab('artilharia')">Artilharia</button>
     <button class="tab" data-tab="retrospecto" onclick="switchTab('retrospecto')">Retrospecto</button>
     <button class="tab" data-tab="competicoes" onclick="switchTab('competicoes')">Competições</button>
+    <button class="tab" data-tab="estadios" onclick="switchTab('estadios')">Estádios</button>
     <button class="tab" data-tab="historico" onclick="switchTab('historico')">Histórico</button>
   </div>
 
@@ -259,6 +260,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="sec-label">Onde estive</div>
         <div class="sec-title">Por Competição</div>
         <div class="comp-grid" id="comp-grid"></div>
+      </div>
+    </div>
+    <div id="tab-estadios" class="pane">
+      <div class="max">
+        <div class="sec-label">Onde já estive</div>
+        <div class="sec-title">Por Estádio</div>
+        <div class="filt-row" id="estadio-filt"></div>
+        <div id="estadio-content"></div>
       </div>
     </div>
     <div id="tab-historico" class="pane">
@@ -415,9 +424,8 @@ const ESPN={
   "Danubio":"https://a.espncdn.com/i/teamlogos/soccer/500/13040.png",
   "UCV":"https://a.espncdn.com/i/teamlogos/soccer/500/14404.png"
 };
-const CUSTOM={};
 function getLogo(t){return CUSTOM[t]||ESPN[t]||null;}
-function setCustomLogo(team,url){CUSTOM[team]=url;renderAll();toast('Logo de '+team+' atualizado! 🎨');}
+function setCustomLogo(team,url){CUSTOM[team]=url;saveLogos();renderAll();toast('Logo de '+team+' atualizado! 🎨');}
 function logoHtml(team,size){
   size=size||38;
   var url=getLogo(team);
@@ -461,9 +469,20 @@ function saveLogoUpload(){
 const SEED=[{"id": 1, "mandante": "Corinthians", "visitante": "Figueirense", "gp": 0, "gc": 1, "adversario": "Figueirense", "casa": true, "res": "D", "camp": "Brasileiro", "data": "2014-05-18", "ano": 2014, "estadio": "Neo Química Arena", "setor": "Sul", "gols": []}, {"id": 2, "mandante": "Corinthians", "visitante": "Fluminense", "gp": 1, "gc": 1, "adversario": "Fluminense", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2014-08-31", "ano": 2014, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Romarinho"]}, {"id": 3, "mandante": "Corinthians", "visitante": "Joinville", "gp": 3, "gc": 0, "adversario": "Joinville", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2014-09-13", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": ["Malcom", "Uendel", "Vagner Love"]}, {"id": 4, "mandante": "Corinthians", "visitante": "Chapecoense", "gp": 1, "gc": 1, "adversario": "Chapecoense", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2014-09-18", "ano": 2014, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Malcom"]}, {"id": 5, "mandante": "Corinthians", "visitante": "Atlético MG", "gp": 2, "gc": 0, "adversario": "Atlético MG", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2014-10-01", "ano": 2014, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Paolo Guerrero", "Luciano"]}, {"id": 6, "mandante": "Corinthians", "visitante": "Criciuma", "gp": 2, "gc": 1, "adversario": "Criciuma", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2014-12-06", "ano": 2014, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Elias", "Fabio Santos"]}, {"id": 7, "mandante": "Corinthians", "visitante": "Marília", "gp": 3, "gc": 0, "adversario": "Marília", "casa": true, "res": "V", "camp": "Paulista", "data": "2015-02-01", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Renato Augusto", "Fagner", "Paolo Guerrero"]}, {"id": 8, "mandante": "Corinthians", "visitante": "Once Caldas", "gp": 4, "gc": 0, "adversario": "Once Caldas", "casa": true, "res": "V", "camp": "Libertadores", "data": "2015-02-04", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Emerson Sheik", "Felipe", "Elias", "Fagner"]}, {"id": 9, "mandante": "Corinthians", "visitante": "Red Bull Brasil", "gp": 0, "gc": 0, "adversario": "Red Bull Brasil", "casa": true, "res": "E", "camp": "Paulista", "data": "2015-03-14", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 10, "mandante": "Corinthians", "visitante": "Portuguesa", "gp": 2, "gc": 0, "adversario": "Portuguesa", "casa": true, "res": "V", "camp": "Paulista", "data": "2015-03-24", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Malcom", "Malcom"]}, {"id": 11, "mandante": "Corinthians", "visitante": "Penapolense", "gp": 5, "gc": 3, "adversario": "Penapolense", "casa": true, "res": "V", "camp": "Paulista", "data": "2015-03-26", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Sul", "gols": ["Paolo Guerrero", "Yago", "Emerson Sheik", "Petros", "Paolo Guerrero"]}, {"id": 12, "mandante": "Corinthians", "visitante": "Danubio", "gp": 4, "gc": 0, "adversario": "Danubio", "casa": true, "res": "V", "camp": "Libertadores", "data": "2015-04-01", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Jadson", "Paolo Guerrero", "Paolo Guerrero", "Paolo Guerrero"]}, {"id": 13, "mandante": "Corinthians", "visitante": "San Lorenzo", "gp": 0, "gc": 0, "adversario": "San Lorenzo", "casa": true, "res": "E", "camp": "Libertadores", "data": "2015-04-16", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 14, "mandante": "Corinthians", "visitante": "Palmeiras", "gp": 2, "gc": 2, "adversario": "Palmeiras", "casa": true, "res": "E", "camp": "Paulista", "data": "2015-04-19", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Danilo", "Stiven Mendonza"]}, {"id": 15, "mandante": "Corinthians", "visitante": "Guaraní - PAR", "gp": 0, "gc": 1, "adversario": "Guaraní - PAR", "casa": true, "res": "D", "camp": "Libertadores", "data": "2015-05-13", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 16, "mandante": "Corinthians", "visitante": "Cruzeiro", "gp": 3, "gc": 0, "adversario": "Cruzeiro", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2015-08-23", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Vagner Love", "Jadson", "Vagner Love"]}, {"id": 17, "mandante": "Corinthians", "visitante": "São Paulo", "gp": 6, "gc": 1, "adversario": "São Paulo", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2015-11-22", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Sul", "gols": ["Bruno Henrique", "Angel Romero", "Edu Dracena", "Lucca", "Angel Romero", "Cristian"]}, {"id": 18, "mandante": "Corinthians", "visitante": "Avaí", "gp": 1, "gc": 1, "adversario": "Avaí", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2015-12-06", "ano": 2015, "estadio": "Neo Química Arena", "setor": "Oeste Superior", "gols": ["Vagner Love"]}, {"id": 19, "mandante": "Corinthians", "visitante": "Cerro Porteño", "gp": 2, "gc": 0, "adversario": "Cerro Porteño", "casa": true, "res": "V", "camp": "Libertadores", "data": "2016-03-16", "ano": 2016, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Lucca", "Gol Contra"]}, {"id": 20, "mandante": "Corinthians", "visitante": "Red Bull Brasil", "gp": 4, "gc": 0, "adversario": "Red Bull Brasil", "casa": true, "res": "V", "camp": "Paulista", "data": "2016-04-16", "ano": 2016, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Giovanni Augusto", "André", "Alan Mineiro", "Lucca"]}, {"id": 21, "mandante": "Corinthians", "visitante": "Nacional URU", "gp": 2, "gc": 2, "adversario": "Nacional URU", "casa": true, "res": "E", "camp": "Libertadores", "data": "2016-04-27", "ano": 2016, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Lucca", "Marquinhos Gabriel"]}, {"id": 22, "mandante": "Corinthians", "visitante": "Grêmio", "gp": 0, "gc": 0, "adversario": "Grêmio", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2016-05-15", "ano": 2016, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 23, "mandante": "Corinthians", "visitante": "Botafogo", "gp": 3, "gc": 1, "adversario": "Botafogo", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2016-06-19", "ano": 2016, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Bruno Henrique", "Marquinhos Gabriel", "Bruno Henrique"]}, {"id": 24, "mandante": "Corinthians", "visitante": "Luverdense", "gp": 1, "gc": 1, "adversario": "Luverdense", "casa": true, "res": "E", "camp": "Copa do Brasil", "data": "2017-03-16", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Jô"]}, {"id": 25, "mandante": "Corinthians", "visitante": "Botafogo (SP)", "gp": 1, "gc": 0, "adversario": "Botafogo (SP)", "casa": true, "res": "V", "camp": "Paulista", "data": "2017-04-09", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Rodriguinho"]}, {"id": 26, "mandante": "Corinthians", "visitante": "Ponte Preta", "gp": 1, "gc": 1, "adversario": "Ponte Preta", "casa": true, "res": "E", "camp": "Paulista", "data": "2017-05-07", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Angel Romero"]}, {"id": 27, "mandante": "Corinthians", "visitante": "Athletico PR", "gp": 2, "gc": 2, "adversario": "Athletico PR", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2017-07-15", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Jô", "Jô"]}, {"id": 28, "mandante": "Corinthians", "visitante": "Vitória", "gp": 0, "gc": 1, "adversario": "Vitória", "casa": true, "res": "D", "camp": "Brasileiro", "data": "2017-08-19", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 29, "mandante": "Corinthians", "visitante": "Vasco", "gp": 1, "gc": 0, "adversario": "Vasco", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2017-09-17", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": ["Jô"]}, {"id": 30, "mandante": "Corinthians", "visitante": "Fluminense", "gp": 3, "gc": 1, "adversario": "Fluminense", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2017-11-15", "ano": 2017, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": ["Jô", "Jô", "Jadson"]}, {"id": 31, "mandante": "Corinthians", "visitante": "São Paulo", "gp": 1, "gc": 0, "adversario": "São Paulo", "casa": true, "res": "V", "camp": "Paulista", "data": "2018-03-28", "ano": 2018, "estadio": "Neo Química Arena", "setor": "Sul", "gols": ["Rodriguinho"]}, {"id": 32, "mandante": "Corinthians", "visitante": "Palmeiras", "gp": 0, "gc": 1, "adversario": "Palmeiras", "casa": true, "res": "D", "camp": "Paulista", "data": "2018-03-31", "ano": 2018, "estadio": "Neo Química Arena", "setor": "Sul", "gols": []}, {"id": 33, "mandante": "Corinthians", "visitante": "América MG", "gp": 1, "gc": 0, "adversario": "América MG", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2018-05-31", "ano": 2018, "estadio": "Neo Química Arena", "setor": "Sul", "gols": ["Jadson"]}, {"id": 34, "mandante": "Corinthians", "visitante": "Grêmio", "gp": 2, "gc": 1, "adversario": "Grêmio", "casa": true, "res": "V", "camp": "Amistoso", "data": "2018-07-08", "ano": 2018, "estadio": "Neo Química Arena", "setor": "Oeste Inferior", "gols": ["Matheus Matias", "Marquinhos Gabriel"]}, {"id": 35, "mandante": "Corinthians", "visitante": "Cruzeiro", "gp": 2, "gc": 2, "adversario": "Cruzeiro", "casa": true, "res": "E", "camp": "Amistoso", "data": "2018-07-11", "ano": 2018, "estadio": "Neo Química Arena", "setor": "Oeste Inferior", "gols": ["Paulo Roberto", "Pedrinho"]}, {"id": 36, "mandante": "Corinthians", "visitante": "Ferroviária", "gp": 1, "gc": 1, "adversario": "Ferroviária", "casa": true, "res": "E", "camp": "Paulista", "data": "2019-03-27", "ano": 2019, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Júnior Urso"]}, {"id": 37, "mandante": "Corinthians", "visitante": "Fluminense", "gp": 0, "gc": 0, "adversario": "Fluminense", "casa": true, "res": "E", "camp": "Sulamericana", "data": "2019-08-22", "ano": 2019, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 38, "mandante": "Corinthians", "visitante": "Independiente del Valle", "gp": 0, "gc": 2, "adversario": "Independiente del Valle", "casa": true, "res": "D", "camp": "Sulamericana", "data": "2019-09-18", "ano": 2019, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 39, "mandante": "Corinthians", "visitante": "Guaraní - PAR", "gp": 2, "gc": 1, "adversario": "Guaraní - PAR", "casa": true, "res": "V", "camp": "Libertadores", "data": "2020-02-12", "ano": 2020, "estadio": "Neo Química Arena", "setor": "Sul", "gols": ["Mauro Boselli", "Luan"]}, {"id": 40, "mandante": "Corinthians", "visitante": "Fluminense", "gp": 1, "gc": 0, "adversario": "Fluminense", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2021-10-13", "ano": 2021, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gabriel Pereira"]}, {"id": 41, "mandante": "Corinthians", "visitante": "Athletico PR", "gp": 1, "gc": 0, "adversario": "Athletico PR", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2021-11-28", "ano": 2021, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Fábio Santos"]}, {"id": 42, "mandante": "Corinthians", "visitante": "Grêmio", "gp": 1, "gc": 1, "adversario": "Grêmio", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2021-12-05", "ano": 2021, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Renato Augusto"]}, {"id": 43, "mandante": "Corinthians", "visitante": "Ponte Preta", "gp": 5, "gc": 0, "adversario": "Ponte Preta", "casa": true, "res": "V", "camp": "Paulista", "data": "2022-03-12", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Renato Augusto", "Gustavo Mosquito", "Paulinho", "Adson", "Gustavo Mantuan"]}, {"id": 44, "mandante": "Corinthians", "visitante": "Deportivo Cali", "gp": 1, "gc": 0, "adversario": "Deportivo Cali", "casa": true, "res": "V", "camp": "Libertadores", "data": "2022-04-13", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gol Contra"]}, {"id": 45, "mandante": "Corinthians", "visitante": "Boca Juniors", "gp": 2, "gc": 0, "adversario": "Boca Juniors", "casa": true, "res": "V", "camp": "Libertadores", "data": "2022-04-26", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Maycon", "Maycon"]}, {"id": 46, "mandante": "Corinthians", "visitante": "Fortaleza", "gp": 1, "gc": 0, "adversario": "Fortaleza", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2022-05-01", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gol Contra"]}, {"id": 47, "mandante": "Corinthians", "visitante": "Portuguesa - RJ", "gp": 2, "gc": 0, "adversario": "Portuguesa - RJ", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2022-05-11", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Júnior Moraes", "Giuliano"]}, {"id": 48, "mandante": "Corinthians", "visitante": "Always Ready", "gp": 1, "gc": 1, "adversario": "Always Ready", "casa": true, "res": "E", "camp": "Libertadores", "data": "2022-05-26", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Adson"]}, {"id": 49, "mandante": "Corinthians", "visitante": "América MG", "gp": 1, "gc": 1, "adversario": "América MG", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2022-05-29", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gustavo Mosquito"]}, {"id": 50, "mandante": "Corinthians", "visitante": "Santos", "gp": 0, "gc": 0, "adversario": "Santos", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2022-06-25", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 51, "mandante": "Corinthians", "visitante": "Boca Juniors", "gp": 0, "gc": 0, "adversario": "Boca Juniors", "casa": true, "res": "E", "camp": "Libertadores", "data": "2022-06-28", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 52, "mandante": "Corinthians", "visitante": "Coritiba", "gp": 3, "gc": 1, "adversario": "Coritiba", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2022-07-20", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Roger Guedes", "Adson", "Raul Gustavo"]}, {"id": 53, "mandante": "Corinthians", "visitante": "Botafogo", "gp": 1, "gc": 0, "adversario": "Botafogo", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2022-07-30", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gustavo Mosquito"]}, {"id": 54, "mandante": "Corinthians", "visitante": "Flamengo", "gp": 0, "gc": 2, "adversario": "Flamengo", "casa": true, "res": "D", "camp": "Libertadores", "data": "2022-08-02", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 55, "mandante": "Corinthians", "visitante": "Atlético GO", "gp": 4, "gc": 1, "adversario": "Atlético GO", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2022-08-17", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Gil", "Yuri Alberto", "Yuri Alberto", "Yuri Alberto"]}, {"id": 56, "mandante": "Corinthians", "visitante": "Fluminense", "gp": 3, "gc": 0, "adversario": "Fluminense", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2022-09-15", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Renato Augusto", "Giuliano", "Gol Contra"]}, {"id": 57, "mandante": "Corinthians", "visitante": "Flamengo", "gp": 0, "gc": 0, "adversario": "Flamengo", "casa": true, "res": "E", "camp": "Copa do Brasil", "data": "2022-10-12", "ano": 2022, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 58, "mandante": "Corinthians", "visitante": "Argentino Juniors", "gp": 0, "gc": 1, "adversario": "Argentino Juniors", "casa": true, "res": "D", "camp": "Libertadores", "data": "2023-04-19", "ano": 2023, "estadio": "Neo Química Arena", "setor": "Oeste Superior", "gols": []}, {"id": 59, "mandante": "Corinthians", "visitante": "Remo", "gp": 2, "gc": 0, "adversario": "Remo", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2023-04-26", "ano": 2023, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Adson", "Roger Guedes"]}, {"id": 60, "mandante": "Corinthians", "visitante": "São Paulo", "gp": 2, "gc": 1, "adversario": "São Paulo", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2023-07-25", "ano": 2023, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Renato Augusto", "Renato Augusto"]}, {"id": 61, "mandante": "Corinthians", "visitante": "Nacional (PAR)", "gp": 4, "gc": 0, "adversario": "Nacional (PAR)", "casa": true, "res": "V", "camp": "Sulamericana", "data": "2024-04-09", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Angel Romero", "Yuri Alberto", "Angel Romero", "Pedro Raul"]}, {"id": 62, "mandante": "Corinthians", "visitante": "América RN", "gp": 2, "gc": 1, "adversario": "América RN", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2024-05-22", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Yuri Alberto", "Cacá"]}, {"id": 63, "mandante": "Corinthians", "visitante": "Racing (URU)", "gp": 3, "gc": 0, "adversario": "Racing (URU)", "casa": true, "res": "V", "camp": "Sulamericana", "data": "2024-05-28", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Rodrigo Garro", "Gol Contra", "Igor Coronado"]}, {"id": 64, "mandante": "Corinthians", "visitante": "Grêmio", "gp": 2, "gc": 2, "adversario": "Grêmio", "casa": true, "res": "E", "camp": "Brasileiro", "data": "2024-07-25", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Yuri Alberto", "Rodrigo Garro"]}, {"id": 65, "mandante": "Corinthians", "visitante": "Atlético GO", "gp": 3, "gc": 0, "adversario": "Atlético GO", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2024-09-21", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Angel Romero", "Angel Romero", "Rodrigo Garro"]}, {"id": 66, "mandante": "Corinthians", "visitante": "Fortaleza", "gp": 3, "gc": 0, "adversario": "Fortaleza", "casa": true, "res": "V", "camp": "Sulamericana", "data": "2024-09-24", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Angel Romero", "Igor Coronado", "Pedro Henrique"]}, {"id": 67, "mandante": "Corinthians", "visitante": "Bahia", "gp": 3, "gc": 0, "adversario": "Bahia", "casa": true, "res": "V", "camp": "Brasileiro", "data": "2024-12-03", "ano": 2024, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Memphis Depay", "Yuri Alberto", "Memphis Depay"]}, {"id": 68, "mandante": "Corinthians", "visitante": "Santos", "gp": 2, "gc": 1, "adversario": "Santos", "casa": true, "res": "V", "camp": "Paulista", "data": "2025-02-12", "ano": 2025, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Yuri Alberto", "Yuri Alberto"]}, {"id": 69, "mandante": "Corinthians", "visitante": "UCV", "gp": 3, "gc": 2, "adversario": "UCV", "casa": true, "res": "V", "camp": "Libertadores", "data": "2025-02-26", "ano": 2025, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Yuri Alberto", "Matheus Bidu", "Yuri Alberto"]}, {"id": 70, "mandante": "Corinthians", "visitante": "América de Cali", "gp": 1, "gc": 1, "adversario": "América de Cali", "casa": true, "res": "E", "camp": "Sulamericana", "data": "2025-03-06", "ano": 2025, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Memphis Depay"]}, {"id": 71, "mandante": "Corinthians", "visitante": "Palmeiras", "gp": 0, "gc": 0, "adversario": "Palmeiras", "casa": true, "res": "E", "camp": "Paulista", "data": "2025-03-27", "ano": 2025, "estadio": "Neo Química Arena", "setor": "Leste Superior", "gols": []}, {"id": 72, "mandante": "Corinthians", "visitante": "Athletico PR", "gp": 2, "gc": 0, "adversario": "Athletico PR", "casa": true, "res": "V", "camp": "Copa do Brasil", "data": "2025-09-10", "ano": 2025, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Rodrigo Garro", "Gui Negão"]}, {"id": 73, "mandante": "Corinthians", "visitante": "Coritiba", "gp": 0, "gc": 2, "adversario": "Coritiba", "casa": true, "res": "D", "camp": "Brasileirão", "data": "2026-03-11", "ano": 2026, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": []}, {"id": 74, "mandante": "Corinthians", "visitante": "Santa Fé", "gp": 2, "gc": 0, "adversario": "Santa Fé", "casa": true, "res": "V", "camp": "Libertadores", "data": "2026-04-15", "ano": 2026, "estadio": "Neo Química Arena", "setor": "Leste Inferior", "gols": ["Raniele", "Gustavo Henrique"]}];
 
 // ── STATE ──
-var games=JSON.parse(JSON.stringify(SEED));
-var editId=null,pendGols=[],filtered=[],curPage=1,retroFilter='todos';
+var LS_KEY='vcc-games', LS_LOGOS='vcc-logos', LS_COMP_ICONS='vcc-comp-icons';
+function lsGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+// Load games: localStorage first, fallback to SEED
+var games=(function(){var s=lsGet(LS_KEY);return(s&&s.length)?s:JSON.parse(JSON.stringify(SEED));})();
+// Load custom logos
+var CUSTOM=(function(){return lsGet(LS_LOGOS)||{};})();
+// Load custom comp icons
+var COMP_ICONS=(function(){return lsGet(LS_COMP_ICONS)||{};})();
+var editId=null,pendGols=[],filtered=[],curPage=1,retroFilter='todos',estadioFilter='todos';
 var PER=15;
+function saveGames(){lsSet(LS_KEY,games);}
+function saveLogos(){lsSet(LS_LOGOS,CUSTOM);}
+function saveCompIcons(){lsSet(LS_COMP_ICONS,COMP_ICONS);}
 
 // ── HELPERS ──
 var cgols=function(g){return g.casa?g.gp:g.gc;};
@@ -471,7 +490,37 @@ var agols=function(g){return g.casa?g.gc:g.gp;};
 var fmt=function(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 var ini=function(n){return n.split(' ').map(function(w){return w[0];}).join('').slice(0,3).toUpperCase();};
 var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
-var compIcon=function(c){var m={'Libertadores':'🏆','Sulamericana':'🥈','Copa do Brasil':'🏅','Paulista':'⭐','Brasileiro':'🇧🇷','Brasileirão':'🇧🇷','Amistoso':'🤝'};return m[c]||'⚽';};
+var COMP_ICON_DEFAULT={'Libertadores':'🏆','Sulamericana':'🥈','Copa do Brasil':'🏅','Paulista':'⭐','Brasileiro':'🇧🇷','Brasileirão':'🇧🇷','Amistoso':'🤝'};
+var compIcon=function(c){
+  if(COMP_ICONS[c]) return '<img src="'+COMP_ICONS[c]+'" style="width:32px;height:32px;object-fit:contain" alt="'+c+'">';
+  return COMP_ICON_DEFAULT[c]||'⚽';
+};
+function setCompIcon(camp,url){COMP_ICONS[camp]=url;saveCompIcons();renderAll();toast('Ícone de '+camp+' atualizado! 🏆');}
+function openCompIconUpload(camp){
+  document.getElementById('ci-camp-name').textContent=camp;
+  document.getElementById('ci-camp-val').value=camp;
+  document.getElementById('ci-preview').innerHTML='';
+  document.getElementById('ci-preview').dataset.url='';
+  document.getElementById('ci-file').value='';
+  openOverlay('comp-icon-modal');
+}
+function handleCompIconFile(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var url=ev.target.result;
+    document.getElementById('ci-preview').innerHTML='<img src="'+url+'" style="width:64px;height:64px;object-fit:contain">';
+    document.getElementById('ci-preview').dataset.url=url;
+  };
+  reader.readAsDataURL(file);
+}
+function saveCompIcon(){
+  var camp=document.getElementById('ci-camp-val').value;
+  var url=document.getElementById('ci-preview').dataset.url;
+  if(!url){alert('Selecione uma imagem primeiro.');return;}
+  setCompIcon(camp,url);
+  closeOverlay('comp-icon-modal');
+}
 
 // ── APP ──
 function enterApp(){
@@ -487,6 +536,7 @@ function switchTab(id){
   if(id==='artilharia') renderArt();
   if(id==='retrospecto') renderRetro();
   if(id==='competicoes') renderComps();
+  if(id==='estadios') renderEstadios();
   if(id==='historico'){buildFilters();applyFilters();}
 }
 
@@ -609,8 +659,9 @@ function renderComps(){
   });
   var list=Object.values(m).sort(function(a,b){return b.t-a.t;});
   document.getElementById('comp-grid').innerHTML=list.map(function(c){
-    return '<div class="comp-card" onclick="showCompDetail(this.dataset.c)" data-c="'+esc(c.n)+'">'
-      +'<div class="comp-icon">'+compIcon(c.n)+'</div>'
+    return '<div class="comp-card" style="position:relative" onclick="showCompDetail(this.dataset.c)" data-c="'+esc(c.n)+'">'
+      +'<div style="position:relative;flex-shrink:0"><div class="comp-icon">'+compIcon(c.n)+'</div>'
+      +'<button onclick="event.stopPropagation();openCompIconUpload(this.dataset.c)" data-c="'+esc(c.n)+'" title="Trocar ícone" style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:bold;z-index:2">+</button></div>'
       +'<div><div class="comp-name">'+esc(c.n)+'</div>'
       +'<div class="comp-num">'+c.t+'</div>'
       +'<div class="comp-veds">'+c.v+'V '+c.e+'E '+c.d+'D</div></div></div>';
@@ -779,12 +830,12 @@ function saveGame(){
   var entry={id:editId||(maxId+1),mandante:mand,visitante:vis,gp:gp,gc:gc,adversario:adv,casa:isCor,res:res,camp:camp,data:data,ano:ano,estadio:est,setor:set,gols:pendGols.slice()};
   if(editId){var idx=games.findIndex(function(g){return g.id===editId;});games[idx]=entry;}
   else games.push(entry);
-  closeOverlay('form-modal');renderAll();
+  closeOverlay('form-modal');saveGames();renderAll();
   toast(editId?'Jogo atualizado! ✅':'Novo jogo adicionado! ⚽');
 }
 function delGame(id){
   if(!confirm('Excluir este jogo?')) return;
-  games=games.filter(function(g){return g.id!==id;});
+  games=games.filter(function(g){return g.id!==id;});saveGames();
   renderAll();toast('Jogo removido');
 }
 
@@ -807,7 +858,7 @@ function importJSON(e){
     try{
       var d=JSON.parse(ev.target.result);
       if(!Array.isArray(d)) throw 0;
-      if(confirm('Importar '+d.length+' jogos? Dados atuais serão substituídos.')){games=d;renderAll();toast(d.length+' jogos importados!');}
+      if(confirm('Importar '+d.length+' jogos? Dados atuais serão substituídos.')){games=d;saveGames();renderAll();toast(d.length+' jogos importados!');}
     }catch(err){alert('Arquivo inválido.');}
   };
   r.readAsText(f);e.target.value='';
@@ -815,6 +866,52 @@ function importJSON(e){
 
 // ── TOAST ──
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+
+function renderEstadios(){
+  var m={};
+  games.forEach(function(g){
+    var e=g.estadio||'Não informado';
+    if(!m[e]) m[e]={nome:e,jogos:[],v:0,d:0,emp:0,gf:0,ga:0};
+    m[e].jogos.push(g);
+    if(g.res==='V') m[e].v++; else if(g.res==='D') m[e].d++; else m[e].emp++;
+    m[e].gf+=cgols(g); m[e].ga+=agols(g);
+  });
+  var list=Object.values(m).sort(function(a,b){return b.jogos.length-a.jogos.length;});
+
+  // filter buttons
+  var all=['todos'].concat(list.map(function(e){return e.nome;}));
+  document.getElementById('estadio-filt').innerHTML=all.map(function(n){
+    return '<button class="filt-btn '+(estadioFilter===n?'on':'')+'" onclick="estadioFilter=\''+n.replace(/'/g,'\\')+'\';\ renderEstadios()">'+(n==='todos'?'Todos':n)+'</button>';
+  }).join('');
+
+  var showing=estadioFilter==='todos'?list:list.filter(function(e){return e.nome===estadioFilter;});
+  document.getElementById('estadio-content').innerHTML=showing.map(function(est){
+    var rows=est.jogos.slice().sort(function(a,b){return b.data.localeCompare(a.data);}).map(function(g){
+      var gs=g.gols.length?('<span style="font-size:.72rem;color:var(--muted)">⚽ '+esc(g.gols.join(', '))+'</span>'):'';
+      return '<div class="detail-row">'
+        +'<span class="res-badge r'+g.res+'">'+g.res+'</span>'
+        +'<span style="font-size:.78rem;color:var(--muted);min-width:80px">'+fmt(g.data)+'</span>'
+        +'<span class="placar-f">'+esc(g.mandante)+' '+g.gp+'×'+g.gc+' '+esc(g.visitante)+'</span>'
+        +'<span class="pill">'+esc(g.camp)+'</span>'
+        +gs+'</div>';
+    }).join('');
+    var pct=est.jogos.length?((est.v*3+est.emp)/(est.jogos.length*3)*100).toFixed(0):0;
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">'
+      +'<div>'
+      +'<div style="font-family:Bebas Neue,sans-serif;font-size:1.5rem;letter-spacing:.04em">🏟️ '+esc(est.nome)+'</div>'
+      +'<div style="font-size:.75rem;color:var(--muted)">'+est.jogos.length+' jogo'+(est.jogos.length>1?'s':'')+' · '+pct+'% aproveitamento</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:.5rem;flex-wrap:wrap">'
+      +'<span class="b bv" style="padding:.25rem .75rem">'+est.v+'V</span>'
+      +'<span class="b be" style="padding:.25rem .75rem">'+est.emp+'E</span>'
+      +'<span class="b bd" style="padding:.25rem .75rem">'+est.d+'D</span>'
+      +'<span class="chip" style="font-size:.75rem">'+est.gf+'×'+est.ga+' gols</span>'
+      +'</div></div>'
+      +'<div class="detail-list">'+rows+'</div>'
+      +'</div>';
+  }).join('');
+}
 
 // ── RENDER ALL ──
 function renderAll(){
@@ -825,5 +922,29 @@ function renderAll(){
   if(document.getElementById('tab-historico').classList.contains('active')){buildFilters();applyFilters();}
 }
 </script>
+
+<!-- COMP ICON MODAL -->
+<div class="overlay" id="comp-icon-modal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-hd">
+      <div class="modal-ttl">Ícone da Competição</div>
+      <button class="modal-x" onclick="closeOverlay('comp-icon-modal')">&#x2715;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1.25rem;align-items:center;text-align:center">
+      <p style="font-size:.85rem;color:var(--muted)">Ícone para: <strong id="ci-camp-name" style="color:var(--text)"></strong></p>
+      <input type="hidden" id="ci-camp-val">
+      <div id="ci-preview" style="min-height:80px;display:flex;align-items:center;justify-content:center"></div>
+      <div style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem" onclick="document.getElementById('ci-file').click()">
+        📁 Clique para selecionar imagem
+      </div>
+      <input type="file" id="ci-file" accept="image/*" style="display:none" onchange="handleCompIconFile(event)">
+      <div style="display:flex;gap:.75rem;width:100%">
+        <button class="btn-cancel" onclick="closeOverlay('comp-icon-modal')" style="flex:1">Cancelar</button>
+        <button class="btn-save" onclick="saveCompIcon()" style="flex:1">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
