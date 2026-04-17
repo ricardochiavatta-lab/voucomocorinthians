@@ -459,6 +459,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <p style="font-size:.85rem;color:var(--muted)">Logo para: <strong id="lu-team-name" style="color:var(--text)"></strong></p>
       <input type="hidden" id="lu-team-val">
       <div id="lu-preview" style="min-height:90px;display:flex;align-items:center;justify-content:center"></div>
+      <button onclick="autoSearchLogo()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:.4rem 1rem;border-radius:5px;font-size:.8rem;cursor:pointer;font-family:Barlow,sans-serif;width:100%;transition:all .2s" id="btn-auto-search">
+        🔍 Buscar logo automaticamente
+      </button>
       <div id="lu-drop-zone" style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem;text-align:center;transition:all .2s"
         onclick="document.getElementById('lu-file').click()"
         ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
@@ -479,81 +482,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <script>
 // ── LOGOS ──
-const ESPN={
-  "Corinthians":"https://a.espncdn.com/i/teamlogos/soccer/500/874.png",
-  "Flamengo":"https://a.espncdn.com/i/teamlogos/soccer/500/5981.png",
-  "Palmeiras":"https://a.espncdn.com/i/teamlogos/soccer/500/1962.png",
-  "São Paulo":"https://a.espncdn.com/i/teamlogos/soccer/500/1960.png",
-  "Santos":"https://a.espncdn.com/i/teamlogos/soccer/500/1961.png",
-  "Grêmio":"https://a.espncdn.com/i/teamlogos/soccer/500/1966.png",
-  "Internacional":"https://a.espncdn.com/i/teamlogos/soccer/500/1967.png",
-  "Cruzeiro":"https://a.espncdn.com/i/teamlogos/soccer/500/1968.png",
-  "Atlético MG":"https://a.espncdn.com/i/teamlogos/soccer/500/1062.png",
-  "Botafogo":"https://a.espncdn.com/i/teamlogos/soccer/500/1964.png",
-  "Vasco":"https://a.espncdn.com/i/teamlogos/soccer/500/1965.png",
-  "Fluminense":"https://a.espncdn.com/i/teamlogos/soccer/500/1969.png",
-  "Athletico PR":"https://a.espncdn.com/i/teamlogos/soccer/500/1971.png",
-  "Coritiba":"https://a.espncdn.com/i/teamlogos/soccer/500/1972.png",
-  "Fortaleza":"https://a.espncdn.com/i/teamlogos/soccer/500/8764.png",
-  "Bahia":"https://a.espncdn.com/i/teamlogos/soccer/500/1975.png",
-  "América MG":"https://a.espncdn.com/i/teamlogos/soccer/500/5984.png",
-  "Sport Recife":"https://a.espncdn.com/i/teamlogos/soccer/500/5993.png",
-  "Ceará":"https://a.espncdn.com/i/teamlogos/soccer/500/5987.png",
-  "Goiás":"https://a.espncdn.com/i/teamlogos/soccer/500/7491.png",
-  "RB Bragantino":"https://a.espncdn.com/i/teamlogos/soccer/500/18429.png",
-  "Cuiabá":"https://a.espncdn.com/i/teamlogos/soccer/500/23548.png",
-  "Juventude":"https://a.espncdn.com/i/teamlogos/soccer/500/5994.png",
-  "Chapecoense":"https://a.espncdn.com/i/teamlogos/soccer/500/8761.png",
-  "Avaí":"https://a.espncdn.com/i/teamlogos/soccer/500/5988.png",
-  "Ponte Preta":"https://a.espncdn.com/i/teamlogos/soccer/500/5989.png",
-  "Vitória":"https://a.espncdn.com/i/teamlogos/soccer/500/5992.png",
-  "Portuguesa":"https://a.espncdn.com/i/teamlogos/soccer/500/5991.png",
-  "Criciúma":"https://a.espncdn.com/i/teamlogos/soccer/500/5985.png",
-  "Atlético GO":"https://a.espncdn.com/i/teamlogos/soccer/500/5986.png",
-  "Red Bull Brasil":"https://a.espncdn.com/i/teamlogos/soccer/500/18429.png",
-  "Botafogo (SP)":"https://a.espncdn.com/i/teamlogos/soccer/500/5990.png",
-  "Guarani":"https://a.espncdn.com/i/teamlogos/soccer/500/5989.png",
-  "Joinville":"https://a.espncdn.com/i/teamlogos/soccer/500/5997.png",
-  "Luverdense":"https://a.espncdn.com/i/teamlogos/soccer/500/16965.png",
-  "Marília":"https://a.espncdn.com/i/teamlogos/soccer/500/6000.png",
-  "Figueirense":"https://a.espncdn.com/i/teamlogos/soccer/500/5996.png",
-  "Penapolense":"https://a.espncdn.com/i/teamlogos/soccer/500/6002.png",
-  "Ferroviária":"https://a.espncdn.com/i/teamlogos/soccer/500/6003.png",
-  "Boca Juniors":"https://a.espncdn.com/i/teamlogos/soccer/500/714.png",
-  "River Plate":"https://a.espncdn.com/i/teamlogos/soccer/500/713.png",
-  "San Lorenzo":"https://a.espncdn.com/i/teamlogos/soccer/500/712.png",
-  "Independiente":"https://a.espncdn.com/i/teamlogos/soccer/500/711.png",
-  "Racing Club":"https://a.espncdn.com/i/teamlogos/soccer/500/709.png",
-  "Racing (URU)":"https://a.espncdn.com/i/teamlogos/soccer/500/13041.png",
-  "Nacional URU":"https://a.espncdn.com/i/teamlogos/soccer/500/13039.png",
-  "Peñarol":"https://a.espncdn.com/i/teamlogos/soccer/500/13038.png",
-  "Cerro Porteño":"https://a.espncdn.com/i/teamlogos/soccer/500/13050.png",
-  "Olimpia":"https://a.espncdn.com/i/teamlogos/soccer/500/13051.png",
-  "Libertad":"https://a.espncdn.com/i/teamlogos/soccer/500/13053.png",
-  "Guaraní - PAR":"https://a.espncdn.com/i/teamlogos/soccer/500/13052.png",
-  "Nacional (PAR)":"https://a.espncdn.com/i/teamlogos/soccer/500/13052.png",
-  "Independiente del Valle":"https://a.espncdn.com/i/teamlogos/soccer/500/14371.png",
-  "LDU Quito":"https://a.espncdn.com/i/teamlogos/soccer/500/13068.png",
-  "Barcelona SC":"https://a.espncdn.com/i/teamlogos/soccer/500/13069.png",
-  "Emelec":"https://a.espncdn.com/i/teamlogos/soccer/500/13070.png",
-  "Deportivo Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13057.png",
-  "América de Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13061.png",
-  "Atlético Nacional":"https://a.espncdn.com/i/teamlogos/soccer/500/13056.png",
-  "Junior":"https://a.espncdn.com/i/teamlogos/soccer/500/13060.png",
-  "Santa Fé":"https://a.espncdn.com/i/teamlogos/soccer/500/13059.png",
-  "Once Caldas":"https://a.espncdn.com/i/teamlogos/soccer/500/13058.png",
-  "Alianza Lima":"https://a.espncdn.com/i/teamlogos/soccer/500/13076.png",
-  "Universitario":"https://a.espncdn.com/i/teamlogos/soccer/500/13077.png",
-  "Colo-Colo":"https://a.espncdn.com/i/teamlogos/soccer/500/13021.png",
-  "Universidad de Chile":"https://a.espncdn.com/i/teamlogos/soccer/500/13022.png",
-  "Danubio":"https://a.espncdn.com/i/teamlogos/soccer/500/13040.png",
-  "Always Ready":"https://a.espncdn.com/i/teamlogos/soccer/500/14370.png",
-  "UCV":"https://a.espncdn.com/i/teamlogos/soccer/500/14404.png",
-  "Argentino Juniors":"https://a.espncdn.com/i/teamlogos/soccer/500/713.png",
-  "Remo":"https://a.espncdn.com/i/teamlogos/soccer/500/6008.png",
-  "América RN":"https://a.espncdn.com/i/teamlogos/soccer/500/23549.png",
-  "Portuguesa - RJ":"https://a.espncdn.com/i/teamlogos/soccer/500/5991.png"
-};
+const ESPN={};
 function getLogo(t){return CUSTOM[t]||ESPN[t]||null;}
 function setCustomLogo(team,url){CUSTOM[team]=url;saveLogos();renderAll();toast('Logo de '+team+' atualizado! 🎨');}
 function logoHtml(team,size){
@@ -1291,27 +1220,115 @@ function renderGrafico(){
 }
 
 
-// ── AUTO-LOGO PREVIEW ──
-function previewTeamLogo(input, previewId){
+// ── LOGO SEARCH VIA WIKIPEDIA ──
+var WIKI_MAP={
+  "Corinthians":"Sport_Club_Corinthians_Paulista",
+  "Flamengo":"Clube_de_Regatas_do_Flamengo",
+  "Palmeiras":"Sociedade_Esportiva_Palmeiras",
+  "São Paulo":"São_Paulo_Futebol_Clube",
+  "Santos":"Santos_FC",
+  "Grêmio":"Grêmio_Foot-Ball_Porto_Alegrense",
+  "Internacional":"Sport_Club_Internacional",
+  "Cruzeiro":"Cruzeiro_Esporte_Clube",
+  "Atlético MG":"Clube_Atlético_Mineiro",
+  "Botafogo":"Botafogo_de_Futebol_e_Regatas",
+  "Vasco":"Club_de_Regatas_Vasco_da_Gama",
+  "Fluminense":"Fluminense_Football_Club",
+  "Athletico PR":"Club_Athletico_Paranaense",
+  "Coritiba":"Coritiba_Foot_Ball_Club",
+  "Fortaleza":"Fortaleza_Esporte_Clube",
+  "Bahia":"Esporte_Clube_Bahia",
+  "Sport Recife":"Sport_Club_do_Recife",
+  "Ceará":"Ceará_Sporting_Club",
+  "Goiás":"Goiás_Esporte_Clube",
+  "RB Bragantino":"Red_Bull_Bragantino",
+  "Cuiabá":"Cuiabá_Esporte_Clube",
+  "Vitória":"Esporte_Clube_Vitória",
+  "Criciúma":"Criciúma_Esporte_Clube",
+  "Atlético GO":"Atlético_Clube_Goianiense",
+  "Juventude":"Esporte_Clube_Juventude",
+  "América MG":"América_Futebol_Clube_(Belo_Horizonte)",
+  "Boca Juniors":"Club_Atlético_Boca_Juniors",
+  "River Plate":"Club_Atlético_River_Plate",
+  "San Lorenzo":"San_Lorenzo_de_Almagro",
+  "Independiente":"Club_Atlético_Independiente",
+  "Racing Club":"Racing_Club_de_Avellaneda",
+  "Nacional URU":"Club_Nacional_de_Football",
+  "Peñarol":"Club_Atlético_Peñarol",
+  "Cerro Porteño":"Club_Cerro_Porteño",
+  "Libertad":"Club_Olimpia",
+  "LDU Quito":"Liga_Deportiva_Universitaria_de_Quito",
+  "Independiente del Valle":"Independiente_del_Valle",
+  "Colo-Colo":"Colo-Colo",
+  "Deportivo Cali":"Deportivo_Cali",
+  "Atlético Nacional":"Atlético_Nacional",
+  "Santa Fé":"Independiente_Santa_Fe",
+  "Once Caldas":"Once_Caldas",
+  "Alianza Lima":"Club_Alianza_Lima"
+};
+
+async function searchLogoWiki(teamName){
+  var title=WIKI_MAP[teamName];
+  if(!title){
+    // Try fuzzy match
+    var lower=teamName.toLowerCase();
+    var key=Object.keys(WIKI_MAP).find(function(k){return k.toLowerCase()===lower;});
+    if(key) title=WIKI_MAP[key];
+  }
+  if(!title) return null;
+  
+  var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(title)+'&prop=pageimages&format=json&pithumbsize=200&origin=*';
+  try{
+    var resp=await fetch(url);
+    var data=await resp.json();
+    var pages=data.query&&data.query.pages;
+    if(!pages) return null;
+    var page=Object.values(pages)[0];
+    return page&&page.thumbnail&&page.thumbnail.source||null;
+  }catch(e){return null;}
+}
+
+async function previewTeamLogo(input, previewId){
   var name=input.value.trim();
   var el=document.getElementById(previewId);
   if(!el) return;
   if(!name){el.innerHTML='';return;}
+  
+  // Check custom logo first
   var url=getLogo(name);
   if(url){
-    el.innerHTML='<img src="'+url+'" style="width:24px;height:24px;object-fit:contain"> <span>'+esc(name)+'</span>';
-  } else {
-    // Try partial match
-    var lower=name.toLowerCase();
-    var espnKeys=Object.keys(ESPN);
-    var match=espnKeys.find(function(k){return k.toLowerCase().startsWith(lower)&&lower.length>=3;});
-    if(match){
-      el.innerHTML='<img src="'+ESPN[match]+'" style="width:24px;height:24px;object-fit:contain;opacity:.6"> <span style="opacity:.6">'+esc(match)+'?</span>';
-    } else {
-      el.innerHTML='<span style="font-size:.7rem">sem logo cadastrado</span>';
-    }
+    el.innerHTML='<img src="'+url+'" style="width:26px;height:26px;object-fit:contain"> <span style="font-size:.72rem;color:var(--gold)">✓ logo</span>';
+    return;
+  }
+  
+  // Try Wikipedia
+  el.innerHTML='<span style="font-size:.7rem;color:var(--muted)">buscando...</span>';
+  var wikiUrl=await searchLogoWiki(name);
+  if(wikiUrl){
+    el.innerHTML='<img src="'+wikiUrl+'" style="width:26px;height:26px;object-fit:contain"> <span style="font-size:.72rem;color:var(--muted)">Wikipedia</span>';
+    // Auto-save this logo to CUSTOM so it persists
+    if(!CUSTOM[name]){CUSTOM[name]=wikiUrl;saveLogos();}
+  }else{
+    el.innerHTML='<span style="font-size:.7rem;color:var(--muted)">sem logo — use o botão ➕</span>';
   }
 }
+
+async function autoSearchLogo(){
+  var team=document.getElementById('lu-team-val').value;
+  if(!team){alert('Abra este modal clicando no + de um time.');return;}
+  var btn=document.getElementById('btn-auto-search');
+  btn.textContent='🔍 Buscando...'; btn.disabled=true;
+  var url=await searchLogoWiki(team);
+  btn.textContent='🔍 Buscar logo automaticamente'; btn.disabled=false;
+  if(url){
+    document.getElementById('lu-preview').innerHTML='<img src="'+url+'" style="width:80px;height:80px;object-fit:contain;border-radius:50%;background:var(--border);padding:4px">';
+    document.getElementById('lu-preview').dataset.url=url;
+    document.getElementById('lu-preview').querySelector('img').onload=function(){};
+  }else{
+    alert('Logo não encontrado automaticamente para "'+team+'". Use a opção de upload manual.');
+  }
+}
+
 function renderEstadios(){
   var m={};
   games.forEach(function(g){
