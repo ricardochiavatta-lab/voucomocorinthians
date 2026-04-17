@@ -501,9 +501,31 @@ function logoHtml(team,size){
 function openLogoUpload(team){
   document.getElementById('lu-team-name').textContent=team;
   document.getElementById('lu-team-val').value=team;
-  document.getElementById('lu-preview').innerHTML='';
-  document.getElementById('lu-preview').dataset.url='';
   document.getElementById('lu-file').value='';
+  var prev=document.getElementById('lu-preview');
+  // Show existing logo if available
+  var existing=getLogo(team);
+  if(existing){
+    prev.innerHTML='<img src="'+existing+'" style="width:90px;height:90px;object-fit:contain">';
+    prev.dataset.url=existing;
+  }else{
+    prev.innerHTML='<span style="font-size:.75rem;color:var(--muted)">Buscando logo...</span>';
+    prev.dataset.url='';
+    // Auto-search immediately
+    searchLogoWiki(team).then(function(url){
+      if(url){
+        var img=document.createElement('img');
+        img.src=url;
+        img.style.cssText='width:90px;height:90px;object-fit:contain';
+        img.onerror=function(){prev.innerHTML='';};
+        prev.innerHTML='';
+        prev.appendChild(img);
+        prev.dataset.url=url;
+      }else{
+        prev.innerHTML='';
+      }
+    });
+  }
   openOverlay('logo-modal');
 }
 function handleLogoFile(e){
@@ -511,7 +533,7 @@ function handleLogoFile(e){
   var reader=new FileReader();
   reader.onload=function(ev){
     var url=ev.target.result;
-    document.getElementById('lu-preview').innerHTML='<img src="'+url+'" style="width:80px;height:80px;object-fit:contain;border-radius:50%;background:var(--border);padding:4px">';
+    document.getElementById('lu-preview').innerHTML='<img src="'+url+'" style="width:90px;height:90px;object-fit:contain">';
     document.getElementById('lu-preview').dataset.url=url;
   };
   reader.readAsDataURL(file);
@@ -1345,7 +1367,31 @@ var LOGOS_MAP={
   "Once Caldas":"https://commons.wikimedia.org/wiki/Special:FilePath/Once_Caldas_logo.svg",
   "Alianza Lima":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Alianza_Lima_logo.svg",
   "Universitario":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Universitario_de_Deportes_logo.svg",
-  "Colo Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg"
+  "Colo Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg",
+  "Ferroviária":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Ferrovi%C3%A1ria_de_Esportes_logo.svg",
+  "Botafogo (SP)":"https://commons.wikimedia.org/wiki/Special:FilePath/Botafogo_Futebol_Clube_(Ribeir%C3%A3o_Preto)_logo.svg",
+  "Portuguesa - RJ":"https://commons.wikimedia.org/wiki/Special:FilePath/Portuguesa_do_Rio_de_Janeiro_logo.svg",
+  "Luverdense":"https://commons.wikimedia.org/wiki/Special:FilePath/Luverdense_Esporte_Clube_logo.svg",
+  "Marília":"https://commons.wikimedia.org/wiki/Special:FilePath/Mar%C3%ADlia_Atl%C3%A9tico_Clube_logo.svg",
+  "Penapolense":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Esportiva_Penapolense_logo.svg",
+  "Joinville":"https://commons.wikimedia.org/wiki/Special:FilePath/Joinville_Esporte_Clube_logo.svg",
+  "Red Bull Brasil":"https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_Bragantino_logo.svg",
+  "Remo":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_do_Remo_logo.svg",
+  "América RN":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_Futebol_Clube_(Natal)_logo.svg",
+  "Danubio":"https://commons.wikimedia.org/wiki/Special:FilePath/Danubio_FC_logo.svg",
+  "Always Ready":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Always_Ready_logo.svg",
+  "Racing (URU)":"https://commons.wikimedia.org/wiki/Special:FilePath/Racing_Club_de_Montevideo_logo.svg",
+  "Nacional (PAR)":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Nacional_(Paraguay)_logo.svg",
+  "Argentino Juniors":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Atl%C3%A9tico_Argentinos_Juniors_logo.svg",
+  "UCV":"https://commons.wikimedia.org/wiki/Special:FilePath/Universidad_C%C3%A9sar_Vallejo_logo.svg",
+  "Atlético-MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
+  "Atletico MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
+  "Athletico-PR":"https://commons.wikimedia.org/wiki/Special:FilePath/Athletico_Paranaense_logo.svg",
+  "Atlético Mineiro":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
+  "Atlético-GO":"https://commons.wikimedia.org/wiki/Special:FilePath/Atl%C3%A9tico_Clube_Goianiense_logo.svg",
+  "Grêmio FBPA":"https://commons.wikimedia.org/wiki/Special:FilePath/Gr%C3%AAmio_FBPA_logo.svg",
+  "S.C. Corinthians":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Corinthians_Paulista_crest.png",
+  "Flamengo RJ":"https://commons.wikimedia.org/wiki/Special:FilePath/Flamengo_logo.svg"
 };
 
 async function searchLogoWiki(teamName){
@@ -1406,15 +1452,19 @@ async function autoSearchLogo(){
   var team=document.getElementById('lu-team-val').value;
   if(!team){alert('Abra este modal clicando no + de um time.');return;}
   var btn=document.getElementById('btn-auto-search');
-  btn.textContent='🔍 Buscando...'; btn.disabled=true;
+  btn.innerHTML='🔍 Buscando...'; btn.disabled=true;
   var url=await searchLogoWiki(team);
-  btn.textContent='🔍 Buscar logo automaticamente'; btn.disabled=false;
+  btn.innerHTML='🔍 Buscar logo automaticamente'; btn.disabled=false;
   if(url){
-    document.getElementById('lu-preview').innerHTML='<img src="'+url+'" style="width:80px;height:80px;object-fit:contain;border-radius:50%;background:var(--border);padding:4px">';
-    document.getElementById('lu-preview').dataset.url=url;
-    document.getElementById('lu-preview').querySelector('img').onload=function(){};
+    var prev=document.getElementById('lu-preview');
+    prev.innerHTML='';
+    var img=document.createElement('img');
+    img.src=url; img.style.cssText='width:90px;height:90px;object-fit:contain';
+    img.onerror=function(){prev.innerHTML='<span style="font-size:.8rem;color:var(--muted)">Imagem não carregou</span>';};
+    prev.appendChild(img);
+    prev.dataset.url=url;
   }else{
-    alert('Logo não encontrado automaticamente para "'+team+'". Use a opção de upload manual.');
+    document.getElementById('lu-preview').innerHTML='<span style="font-size:.8rem;color:var(--muted)">Não encontrado. Use o upload manual.</span>';
   }
 }
 
