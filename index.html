@@ -376,11 +376,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
   </div>
 
-  <div class="data-bar">
-    <button class="btn-io" onclick="exportJSON()">⬇ Exportar JSON</button>
-    <label class="btn-io" style="cursor:pointer">⬆ Importar JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
   </div>
-</div>
 
 <!-- MODAL FORM -->
 <div class="overlay" id="form-modal">
@@ -592,14 +588,24 @@ async function initSupabase(){
   if(splash) splash.classList.add('hide');
   document.getElementById('app').style.display='none';
   
-  // Handle redirect back from Google OAuth (implicit flow)
-  if(window.location.hash.includes('access_token')||window.location.hash.includes('error_description')){
-    await new Promise(function(r){setTimeout(r,800);});
-    // Clean URL hash without reload
+  // Handle redirect back from Google OAuth
+  var _hash=window.location.hash||'';
+  if(_hash.includes('access_token')||_hash.includes('refresh_token')||_hash.includes('error_description')){
+    // Give Supabase JS time to process the hash and establish session
+    await new Promise(function(r){setTimeout(r,1200);});
     try{history.replaceState(null,'',window.location.pathname+window.location.search);}catch(e){}
   }
   
-  var {data:{session},error}=await sp.auth.getSession();
+  var _sess1=await sp.auth.getSession();
+  var session=_sess1&&_sess1.data&&_sess1.data.session;
+  
+  // If no session but we just came from OAuth redirect, retry once
+  if(!session&&(_hash.includes('access_token')||_hash.includes('refresh_token'))){
+    await new Promise(function(r){setTimeout(r,1000);});
+    var _sess2=await sp.auth.getSession();
+    session=_sess2&&_sess2.data&&_sess2.data.session;
+  }
+  
   if(session){
     currentUser=session.user;
     document.getElementById('login-screen').classList.add('hide');
@@ -675,7 +681,10 @@ async function loadGames(){
   if(!currentUser) return;
   var sp=getSupa();
   var {data,error}=await sp.from('jogos').select('*').eq('user_id',currentUser.id).order('data',{ascending:false});
-  if(!error&&data&&data.length>0){
+  if(error){console.error('loadGames error',error);return;}
+  
+  if(data&&data.length>0){
+    // DB has data - load it
     games=data.map(function(r){return {
       id:r.id,_db_id:r.id,
       mandante:r.mandante,visitante:r.visitante,
@@ -685,6 +694,37 @@ async function loadGames(){
       estadio:r.estadio||'',setor:r.setor||'',
       gols:r.gols||[],badges:r.badges||[],com_quem:r.com_quem||[]
     };});
+    console.log('Loaded '+games.length+' games from DB');
+  } else {
+    // DB empty - migrate current games (SEED + any local additions) to DB
+    console.log('DB empty, migrating '+games.length+' games...');
+    var migrated=[];
+    for(var i=0;i<games.length;i++){
+      var g=games[i];
+      var row={
+        user_id:currentUser.id,
+        mandante:g.mandante,visitante:g.visitante,
+        gp:g.gp,gc:g.gc,adversario:g.adversario,
+        casa:g.casa,res:g.res,camp:g.camp,
+        data:g.data,ano:g.ano||parseInt((g.data||'').slice(0,4)),
+        estadio:g.estadio||'',setor:g.setor||'',
+        gols:g.gols||[],badges:g.badges||[],com_quem:g.com_quem||[]
+      };
+      migrated.push(row);
+    }
+    // Batch insert in chunks of 50
+    for(var c=0;c<migrated.length;c+=50){
+      var chunk=migrated.slice(c,c+50);
+      var {data:ins,error:insErr}=await sp.from('jogos').insert(chunk).select();
+      if(insErr){console.error('migrate error',insErr);break;}
+      if(ins){
+        for(var j=0;j<ins.length&&(c+j)<games.length;j++){
+          games[c+j]._db_id=ins[j].id;
+          games[c+j].id=ins[j].id;
+        }
+      }
+    }
+    console.log('Migration done');
   }
 }
 
