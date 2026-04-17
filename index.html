@@ -246,6 +246,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .pessoa-check-btn{padding:.2rem .65rem;border-radius:4px;font-size:.75rem;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Barlow',sans-serif;transition:all .2s}
 .pessoa-check-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1)}
 
+
+/* AUTO-LOGO SUGGESTION */
+.logo-suggestions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.logo-sug-item{display:flex;align-items:center;gap:.4rem;padding:.3rem .6rem;background:var(--card);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.78rem;transition:border-color .2s}
+.logo-sug-item:hover{border-color:var(--gold)}
+.logo-sug-item img{width:22px;height:22px;object-fit:contain}
+
 </style>
 </head>
 <body>
@@ -391,11 +398,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="fg full">
         <label class="lbl">Times e Placar</label>
         <div class="teams-row">
-          <input type="text" class="inp" id="f-mandante" placeholder="Mandante">
+          <input type="text" class="inp" id="f-mandante" placeholder="Mandante" oninput="previewTeamLogo(this,'prev-mand')" autocomplete="off">
           <input type="number" class="inp" id="f-gp" placeholder="0" min="0" style="width:58px;flex:none">
           <span class="px">×</span>
           <input type="number" class="inp" id="f-gc" placeholder="0" min="0" style="width:58px;flex:none">
-          <input type="text" class="inp" id="f-visitante" placeholder="Visitante">
+          <input type="text" class="inp" id="f-visitante" placeholder="Visitante" oninput="previewTeamLogo(this,'prev-visit')" autocomplete="off">
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:.4rem">
+          <div id="prev-mand" style="height:28px;display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)"></div>
+          <div id="prev-visit" style="height:28px;display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)"></div>
         </div>
       </div>
       <div class="fg"><label class="lbl">Estádio</label><input type="text" class="inp" id="f-estadio" placeholder="Nome do estádio" list="dl-est"><datalist id="dl-est"></datalist></div>
@@ -448,8 +459,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <p style="font-size:.85rem;color:var(--muted)">Logo para: <strong id="lu-team-name" style="color:var(--text)"></strong></p>
       <input type="hidden" id="lu-team-val">
       <div id="lu-preview" style="min-height:90px;display:flex;align-items:center;justify-content:center"></div>
-      <div style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem" onclick="document.getElementById('lu-file').click()">
-        📁 Clique para selecionar o PNG
+      <div id="lu-drop-zone" style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem;text-align:center;transition:all .2s"
+        onclick="document.getElementById('lu-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+        ondragleave="this.style.borderColor='var(--border)';this.style.color='var(--muted)'"
+        ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.color='var(--muted)';handleLogoFile({target:{files:event.dataTransfer.files}})">
+        📁 Clique ou arraste a imagem aqui
       </div>
       <input type="file" id="lu-file" accept="image/*" style="display:none" onchange="handleLogoFile(event)">
       <div style="display:flex;gap:.75rem;width:100%">
@@ -473,9 +488,8 @@ const ESPN={
   "Grêmio":"https://a.espncdn.com/i/teamlogos/soccer/500/1966.png",
   "Internacional":"https://a.espncdn.com/i/teamlogos/soccer/500/1967.png",
   "Cruzeiro":"https://a.espncdn.com/i/teamlogos/soccer/500/1968.png",
-  "Atlético MG":"https://a.espncdn.com/i/teamlogos/soccer/500/1973.png",
+  "Atlético MG":"https://a.espncdn.com/i/teamlogos/soccer/500/1062.png",
   "Botafogo":"https://a.espncdn.com/i/teamlogos/soccer/500/1964.png",
-  "Botafogo (SP)":"https://a.espncdn.com/i/teamlogos/soccer/500/5990.png",
   "Vasco":"https://a.espncdn.com/i/teamlogos/soccer/500/1965.png",
   "Fluminense":"https://a.espncdn.com/i/teamlogos/soccer/500/1969.png",
   "Athletico PR":"https://a.espncdn.com/i/teamlogos/soccer/500/1971.png",
@@ -483,33 +497,62 @@ const ESPN={
   "Fortaleza":"https://a.espncdn.com/i/teamlogos/soccer/500/8764.png",
   "Bahia":"https://a.espncdn.com/i/teamlogos/soccer/500/1975.png",
   "América MG":"https://a.espncdn.com/i/teamlogos/soccer/500/5984.png",
-  "Avaí":"https://a.espncdn.com/i/teamlogos/soccer/500/5988.png",
+  "Sport Recife":"https://a.espncdn.com/i/teamlogos/soccer/500/5993.png",
+  "Ceará":"https://a.espncdn.com/i/teamlogos/soccer/500/5987.png",
+  "Goiás":"https://a.espncdn.com/i/teamlogos/soccer/500/7491.png",
+  "RB Bragantino":"https://a.espncdn.com/i/teamlogos/soccer/500/18429.png",
+  "Cuiabá":"https://a.espncdn.com/i/teamlogos/soccer/500/23548.png",
+  "Juventude":"https://a.espncdn.com/i/teamlogos/soccer/500/5994.png",
   "Chapecoense":"https://a.espncdn.com/i/teamlogos/soccer/500/8761.png",
+  "Avaí":"https://a.espncdn.com/i/teamlogos/soccer/500/5988.png",
   "Ponte Preta":"https://a.espncdn.com/i/teamlogos/soccer/500/5989.png",
-  "Figueirense":"https://a.espncdn.com/i/teamlogos/soccer/500/5996.png",
   "Vitória":"https://a.espncdn.com/i/teamlogos/soccer/500/5992.png",
   "Portuguesa":"https://a.espncdn.com/i/teamlogos/soccer/500/5991.png",
-  "Portuguesa - RJ":"https://a.espncdn.com/i/teamlogos/soccer/500/5991.png",
-  "Red Bull Brasil":"https://a.espncdn.com/i/teamlogos/soccer/500/8762.png",
-  "Criciuma":"https://a.espncdn.com/i/teamlogos/soccer/500/5985.png",
-  "Joinville":"https://a.espncdn.com/i/teamlogos/soccer/500/5997.png",
+  "Criciúma":"https://a.espncdn.com/i/teamlogos/soccer/500/5985.png",
   "Atlético GO":"https://a.espncdn.com/i/teamlogos/soccer/500/5986.png",
+  "Red Bull Brasil":"https://a.espncdn.com/i/teamlogos/soccer/500/18429.png",
+  "Botafogo (SP)":"https://a.espncdn.com/i/teamlogos/soccer/500/5990.png",
+  "Guarani":"https://a.espncdn.com/i/teamlogos/soccer/500/5989.png",
+  "Joinville":"https://a.espncdn.com/i/teamlogos/soccer/500/5997.png",
+  "Luverdense":"https://a.espncdn.com/i/teamlogos/soccer/500/16965.png",
+  "Marília":"https://a.espncdn.com/i/teamlogos/soccer/500/6000.png",
+  "Figueirense":"https://a.espncdn.com/i/teamlogos/soccer/500/5996.png",
+  "Penapolense":"https://a.espncdn.com/i/teamlogos/soccer/500/6002.png",
+  "Ferroviária":"https://a.espncdn.com/i/teamlogos/soccer/500/6003.png",
   "Boca Juniors":"https://a.espncdn.com/i/teamlogos/soccer/500/714.png",
+  "River Plate":"https://a.espncdn.com/i/teamlogos/soccer/500/713.png",
   "San Lorenzo":"https://a.espncdn.com/i/teamlogos/soccer/500/712.png",
-  "Cerro Porteño":"https://a.espncdn.com/i/teamlogos/soccer/500/13050.png",
+  "Independiente":"https://a.espncdn.com/i/teamlogos/soccer/500/711.png",
+  "Racing Club":"https://a.espncdn.com/i/teamlogos/soccer/500/709.png",
+  "Racing (URU)":"https://a.espncdn.com/i/teamlogos/soccer/500/13041.png",
   "Nacional URU":"https://a.espncdn.com/i/teamlogos/soccer/500/13039.png",
-  "Once Caldas":"https://a.espncdn.com/i/teamlogos/soccer/500/13058.png",
+  "Peñarol":"https://a.espncdn.com/i/teamlogos/soccer/500/13038.png",
+  "Cerro Porteño":"https://a.espncdn.com/i/teamlogos/soccer/500/13050.png",
+  "Olimpia":"https://a.espncdn.com/i/teamlogos/soccer/500/13051.png",
+  "Libertad":"https://a.espncdn.com/i/teamlogos/soccer/500/13053.png",
   "Guaraní - PAR":"https://a.espncdn.com/i/teamlogos/soccer/500/13052.png",
   "Nacional (PAR)":"https://a.espncdn.com/i/teamlogos/soccer/500/13052.png",
-  "Deportivo Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13057.png",
-  "América de Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13057.png",
-  "Argentino Juniors":"https://a.espncdn.com/i/teamlogos/soccer/500/713.png",
   "Independiente del Valle":"https://a.espncdn.com/i/teamlogos/soccer/500/14371.png",
-  "Racing (URU)":"https://a.espncdn.com/i/teamlogos/soccer/500/13041.png",
+  "LDU Quito":"https://a.espncdn.com/i/teamlogos/soccer/500/13068.png",
+  "Barcelona SC":"https://a.espncdn.com/i/teamlogos/soccer/500/13069.png",
+  "Emelec":"https://a.espncdn.com/i/teamlogos/soccer/500/13070.png",
+  "Deportivo Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13057.png",
+  "América de Cali":"https://a.espncdn.com/i/teamlogos/soccer/500/13061.png",
+  "Atlético Nacional":"https://a.espncdn.com/i/teamlogos/soccer/500/13056.png",
+  "Junior":"https://a.espncdn.com/i/teamlogos/soccer/500/13060.png",
   "Santa Fé":"https://a.espncdn.com/i/teamlogos/soccer/500/13059.png",
-  "Always Ready":"https://a.espncdn.com/i/teamlogos/soccer/500/14370.png",
+  "Once Caldas":"https://a.espncdn.com/i/teamlogos/soccer/500/13058.png",
+  "Alianza Lima":"https://a.espncdn.com/i/teamlogos/soccer/500/13076.png",
+  "Universitario":"https://a.espncdn.com/i/teamlogos/soccer/500/13077.png",
+  "Colo-Colo":"https://a.espncdn.com/i/teamlogos/soccer/500/13021.png",
+  "Universidad de Chile":"https://a.espncdn.com/i/teamlogos/soccer/500/13022.png",
   "Danubio":"https://a.espncdn.com/i/teamlogos/soccer/500/13040.png",
-  "UCV":"https://a.espncdn.com/i/teamlogos/soccer/500/14404.png"
+  "Always Ready":"https://a.espncdn.com/i/teamlogos/soccer/500/14370.png",
+  "UCV":"https://a.espncdn.com/i/teamlogos/soccer/500/14404.png",
+  "Argentino Juniors":"https://a.espncdn.com/i/teamlogos/soccer/500/713.png",
+  "Remo":"https://a.espncdn.com/i/teamlogos/soccer/500/6008.png",
+  "América RN":"https://a.espncdn.com/i/teamlogos/soccer/500/23549.png",
+  "Portuguesa - RJ":"https://a.espncdn.com/i/teamlogos/soccer/500/5991.png"
 };
 function getLogo(t){return CUSTOM[t]||ESPN[t]||null;}
 function setCustomLogo(team,url){CUSTOM[team]=url;saveLogos();renderAll();toast('Logo de '+team+' atualizado! 🎨');}
@@ -1247,6 +1290,28 @@ function renderGrafico(){
   });
 }
 
+
+// ── AUTO-LOGO PREVIEW ──
+function previewTeamLogo(input, previewId){
+  var name=input.value.trim();
+  var el=document.getElementById(previewId);
+  if(!el) return;
+  if(!name){el.innerHTML='';return;}
+  var url=getLogo(name);
+  if(url){
+    el.innerHTML='<img src="'+url+'" style="width:24px;height:24px;object-fit:contain"> <span>'+esc(name)+'</span>';
+  } else {
+    // Try partial match
+    var lower=name.toLowerCase();
+    var espnKeys=Object.keys(ESPN);
+    var match=espnKeys.find(function(k){return k.toLowerCase().startsWith(lower)&&lower.length>=3;});
+    if(match){
+      el.innerHTML='<img src="'+ESPN[match]+'" style="width:24px;height:24px;object-fit:contain;opacity:.6"> <span style="opacity:.6">'+esc(match)+'?</span>';
+    } else {
+      el.innerHTML='<span style="font-size:.7rem">sem logo cadastrado</span>';
+    }
+  }
+}
 function renderEstadios(){
   var m={};
   games.forEach(function(g){
@@ -1338,8 +1403,12 @@ window.addEventListener('DOMContentLoaded', function(){
       <p style="font-size:.85rem;color:var(--muted)">Ícone para: <strong id="ci-camp-name" style="color:var(--text)"></strong></p>
       <input type="hidden" id="ci-camp-val">
       <div id="ci-preview" style="min-height:80px;display:flex;align-items:center;justify-content:center"></div>
-      <div style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem" onclick="document.getElementById('ci-file').click()">
-        📁 Clique para selecionar imagem
+      <div style="border:2px dashed var(--border);border-radius:8px;padding:1.5rem;width:100%;cursor:pointer;color:var(--muted);font-size:.85rem;text-align:center;transition:all .2s"
+        onclick="document.getElementById('ci-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+        ondragleave="this.style.borderColor='var(--border)'"
+        ondrop="event.preventDefault();this.style.borderColor='var(--border)';handleCompIconFile({target:{files:event.dataTransfer.files}})">
+        📁 Clique ou arraste a imagem aqui
       </div>
       <input type="file" id="ci-file" accept="image/*" style="display:none" onchange="handleCompIconFile(event)">
       <div style="display:flex;gap:.75rem;width:100%">
