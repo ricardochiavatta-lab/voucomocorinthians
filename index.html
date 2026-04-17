@@ -1224,68 +1224,100 @@ function renderGrafico(){
 var WIKI_MAP={
   "Corinthians":"Sport_Club_Corinthians_Paulista",
   "Flamengo":"Clube_de_Regatas_do_Flamengo",
-  "Palmeiras":"Sociedade_Esportiva_Palmeiras",
-  "São Paulo":"São_Paulo_Futebol_Clube",
+  "Palmeiras":"Palmeiras",
+  "São Paulo":"São_Paulo_FC",
   "Santos":"Santos_FC",
-  "Grêmio":"Grêmio_Foot-Ball_Porto_Alegrense",
+  "Grêmio":"Grêmio_FBPA",
   "Internacional":"Sport_Club_Internacional",
   "Cruzeiro":"Cruzeiro_Esporte_Clube",
   "Atlético MG":"Clube_Atlético_Mineiro",
   "Botafogo":"Botafogo_de_Futebol_e_Regatas",
   "Vasco":"Club_de_Regatas_Vasco_da_Gama",
-  "Fluminense":"Fluminense_Football_Club",
+  "Fluminense":"Fluminense_FC",
   "Athletico PR":"Club_Athletico_Paranaense",
-  "Coritiba":"Coritiba_Foot_Ball_Club",
-  "Fortaleza":"Fortaleza_Esporte_Clube",
+  "Coritiba":"Coritiba_FBC",
+  "Fortaleza":"Fortaleza_EC",
   "Bahia":"Esporte_Clube_Bahia",
   "Sport Recife":"Sport_Club_do_Recife",
-  "Ceará":"Ceará_Sporting_Club",
-  "Goiás":"Goiás_Esporte_Clube",
+  "Ceará":"Ceará_SC",
+  "Goiás":"Goiás_EC",
   "RB Bragantino":"Red_Bull_Bragantino",
-  "Cuiabá":"Cuiabá_Esporte_Clube",
+  "Cuiabá":"Cuiabá_EC",
   "Vitória":"Esporte_Clube_Vitória",
-  "Criciúma":"Criciúma_Esporte_Clube",
+  "Criciúma":"Criciúma_EC",
   "Atlético GO":"Atlético_Clube_Goianiense",
   "Juventude":"Esporte_Clube_Juventude",
-  "América MG":"América_Futebol_Clube_(Belo_Horizonte)",
-  "Boca Juniors":"Club_Atlético_Boca_Juniors",
-  "River Plate":"Club_Atlético_River_Plate",
+  "América MG":"América_Mineiro",
+  "Chapecoense":"Associação_Chapecoense_de_Futebol",
+  "Ponte Preta":"Associação_Atlética_Ponte_Preta",
+  "Figueirense":"Figueirense_FC",
+  "Avaí":"Avaí_FC",
+  "Boca Juniors":"Boca_Juniors",
+  "River Plate":"River_Plate",
   "San Lorenzo":"San_Lorenzo_de_Almagro",
   "Independiente":"Club_Atlético_Independiente",
   "Racing Club":"Racing_Club_de_Avellaneda",
   "Nacional URU":"Club_Nacional_de_Football",
   "Peñarol":"Club_Atlético_Peñarol",
   "Cerro Porteño":"Club_Cerro_Porteño",
-  "Libertad":"Club_Olimpia",
+  "Olimpia":"Club_Olimpia",
+  "Libertad":"Club_Libertad",
+  "Guaraní - PAR":"Club_Guaraní",
   "LDU Quito":"Liga_Deportiva_Universitaria_de_Quito",
   "Independiente del Valle":"Independiente_del_Valle",
   "Colo-Colo":"Colo-Colo",
+  "Universidad de Chile":"Club_Universidad_de_Chile",
   "Deportivo Cali":"Deportivo_Cali",
+  "América de Cali":"América_de_Cali",
   "Atlético Nacional":"Atlético_Nacional",
   "Santa Fé":"Independiente_Santa_Fe",
   "Once Caldas":"Once_Caldas",
-  "Alianza Lima":"Club_Alianza_Lima"
+  "Alianza Lima":"Club_Alianza_Lima",
+  "Universitario":"Club_Universitario_de_Deportes",
+  "Danubio":"Danubio_FC",
+  "Always Ready":"Club_Always_Ready",
+  "Remo":"Clube_do_Remo",
+  "Ferroviária":"Associação_Ferroviária_de_Esportes",
+  "Racing (URU)":"Racing_Club_de_Montevideo",
+  "Portuguesa":"Associação_Portuguesa_de_Desportos",
+  "Portuguesa - RJ":"Portuguesa_(RJ)",
+  "Botafogo (SP)":"Botafogo_FC_(Ribeirão_Preto)",
+  "Argentino Juniors":"Club_Atlético_Argentinos_Juniors",
+  "América RN":"América_Futebol_Clube_(Natal)",
+  "Nacional (PAR)":"Club_Nacional_(Paraguay)",
+  "Marília":"Marília_AC",
+  "Penapolense":"Associação_Esportiva_Penapolense",
+  "Joinville":"Joinville_EC",
+  "Luverdense":"Luverdense_EC"
 };
 
 async function searchLogoWiki(teamName){
   var title=WIKI_MAP[teamName];
   if(!title){
-    // Try fuzzy match
+    // Try case-insensitive match
     var lower=teamName.toLowerCase();
     var key=Object.keys(WIKI_MAP).find(function(k){return k.toLowerCase()===lower;});
     if(key) title=WIKI_MAP[key];
   }
-  if(!title) return null;
+  // If still no title, try searching by team name directly
+  var titlesToTry=title?[title]:[teamName];
   
-  var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(title)+'&prop=pageimages&format=json&pithumbsize=200&origin=*';
-  try{
-    var resp=await fetch(url);
-    var data=await resp.json();
-    var pages=data.query&&data.query.pages;
-    if(!pages) return null;
-    var page=Object.values(pages)[0];
-    return page&&page.thumbnail&&page.thumbnail.source||null;
-  }catch(e){return null;}
+  for(var ti=0;ti<titlesToTry.length;ti++){
+    var t=titlesToTry[ti];
+    var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(t)+'&prop=pageimages&format=json&pithumbsize=300&origin=*';
+    try{
+      var resp=await fetch(url);
+      var data=await resp.json();
+      var pages=data.query&&data.query.pages;
+      if(!pages) continue;
+      var page=Object.values(pages)[0];
+      // Skip if page not found (-1) or no image
+      if(page.missing!==undefined) continue;
+      var img=page.thumbnail&&page.thumbnail.source;
+      if(img) return img;
+    }catch(e){continue;}
+  }
+  return null;
 }
 
 async function previewTeamLogo(input, previewId){
