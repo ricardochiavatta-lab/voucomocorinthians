@@ -200,15 +200,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
 }
 
 /* LOGIN */
-#login-screen{position:fixed;inset:0;z-index:10000;background:#f5f5f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+#login-screen{position:fixed;inset:0;z-index:10000;background:#0c0c0c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
 #login-screen.hide{display:none}
 .login-crest{width:140px;height:auto;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.2))}
-.login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,5vw,3.2rem);letter-spacing:.08em;text-align:center;line-height:1;color:#111}
-.login-sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:#666;text-align:center}
-.btn-google{display:flex;align-items:center;gap:.75rem;padding:.8rem 2rem;border-radius:6px;background:#fff;color:#333;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;border:1.5px solid #ddd;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:all .2s;margin-top:.5rem}
-.btn-google:hover{box-shadow:0 4px 16px rgba(0,0,0,.15);transform:translateY(-1px)}
+.login-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,5vw,3.2rem);letter-spacing:.08em;text-align:center;line-height:1;color:#f2f2f2}
+.login-sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:#888;text-align:center}
+.btn-google{display:flex;align-items:center;gap:.75rem;padding:.8rem 2rem;border-radius:6px;background:#1e1e1e;color:#f2f2f2;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;border:1.5px solid #3a3a3a;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:all .2s;margin-top:.5rem}
+.btn-google:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.5);transform:translateY(-1px)}
 .btn-google img{width:20px;height:20px}
-.login-msg{font-size:.8rem;color:#888;text-align:center;max-width:280px}
+.login-msg{font-size:.8rem;color:#666;text-align:center;max-width:280px}
 .user-chip{display:flex;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:.3rem .8rem;font-size:.78rem}
 .user-chip img{width:22px;height:22px;border-radius:50%}
 .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);padding:.25rem .6rem;border-radius:4px;font-size:.72rem;cursor:pointer;font-family:'Barlow',sans-serif;transition:all .2s}
@@ -478,7 +478,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 // ── LOGOS ──
 const ESPN={
-  "Corinthians":"https://a.espncdn.com/i/teamlogos/soccer/500/1963.png",
+  "Corinthians":"https://a.espncdn.com/i/teamlogos/soccer/500/874.png",
   "Flamengo":"https://a.espncdn.com/i/teamlogos/soccer/500/5981.png",
   "Palmeiras":"https://a.espncdn.com/i/teamlogos/soccer/500/1962.png",
   "São Paulo":"https://a.espncdn.com/i/teamlogos/soccer/500/1960.png",
@@ -595,30 +595,59 @@ function saveCompIcons(){lsSet(LS_COMP_ICONS,COMP_ICONS);}
 
 // ── AUTH ──
 async function initSupabase(){
+  // Hide splash immediately, show login screen
+  var splash=document.getElementById('splash');
+  if(splash) splash.classList.add('hide');
+  document.getElementById('app').style.display='none';
+  
   var sp=getSupa();
-  if(!sp)return;
-  var {data:{session}}=await sp.auth.getSession();
+  if(!sp){
+    // Supabase not loaded yet, retry
+    setTimeout(initSupabase, 300);
+    return;
+  }
+  
+  // Copy crest to login screen
+  var splashCrest=document.querySelector('.splash-crest');
+  var loginCrest=document.getElementById('login-crest-img');
+  if(loginCrest&&splashCrest) loginCrest.src=splashCrest.src;
+  
+  var result=await sp.auth.getSession();
+  var session=result&&result.data&&result.data.session;
   if(session){
     currentUser=session.user;
+    document.getElementById('login-screen').classList.add('hide');
     showApp();
   }else{
-    showLogin();
+    document.getElementById('login-screen').classList.remove('hide');
   }
   sp.auth.onAuthStateChange(function(event,session){
-    if(session){currentUser=session.user;showApp();}
+    if(session){currentUser=session.user;document.getElementById('login-screen').classList.add('hide');showApp();}
     else{currentUser=null;showLogin();}
   });
 }
 
 async function loginWithGoogle(){
   var sp=getSupa();
+  if(!sp){alert('Erro: Supabase não carregou. Recarregue a página.');return;}
   var btn=document.getElementById('btn-google-login');
-  btn.textContent='Aguarde...'; btn.disabled=true;
-  var {error}=await sp.auth.signInWithOAuth({
-    provider:'google',
-    options:{redirectTo:window.location.href}
-  });
-  if(error){alert('Erro: '+error.message);btn.textContent='Entrar com Google';btn.disabled=false;}
+  btn.innerHTML='⏳ Aguarde...'; btn.disabled=true;
+  try{
+    var result=await sp.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:window.location.href}
+    });
+    if(result.error){
+      alert('Erro no login: '+result.error.message);
+      btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width:20px;height:20px"> Entrar com Google';
+      btn.disabled=false;
+    }
+    // If no error, browser will redirect to Google
+  }catch(e){
+    alert('Erro: '+e.message);
+    btn.innerHTML='<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width:20px;height:20px"> Entrar com Google';
+    btn.disabled=false;
+  }
 }
 
 async function logout(){
@@ -628,12 +657,15 @@ async function logout(){
 
 function showLogin(){
   document.getElementById('login-screen').classList.remove('hide');
-  document.getElementById('splash').style.display='flex';
+  // Hide splash, show login
+  var splash=document.getElementById('splash');
+  if(splash) splash.classList.add('hide');
   document.getElementById('app').classList.remove('visible');
   document.getElementById('app').style.display='none';
-  var crestSrc=document.querySelector('.splash-crest')?document.querySelector('.splash-crest').src:'';
+  // Copy crest from splash to login
+  var splashCrest=document.querySelector('.splash-crest');
   var loginCrest=document.getElementById('login-crest-img');
-  if(loginCrest&&crestSrc) loginCrest.src=crestSrc;
+  if(loginCrest&&splashCrest) loginCrest.src=splashCrest.src;
 }
 
 async function showApp(){
@@ -1300,6 +1332,11 @@ function renderAll(){
   if(document.getElementById('tab-pessoas').classList.contains('active')) renderPessoas();
   if(document.getElementById('tab-historico').classList.contains('active')){buildFilters();applyFilters();}
 }
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', function(){
+  initSupabase();
+});
 </script>
 
 <!-- MODAL PESSOAS -->
