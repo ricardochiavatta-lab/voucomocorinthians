@@ -483,7 +483,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 // ── LOGOS ──
 const ESPN={};
-function getLogo(t){return CUSTOM[t]||ESPN[t]||null;}
+function getLogo(t){return CUSTOM[t]||LOGOS_MAP[t]||null;}
 function setCustomLogo(team,url){CUSTOM[team]=url;saveLogos();renderAll();toast('Logo de '+team+' atualizado! 🎨');}
 function logoHtml(team,size){
   size=size||38;
@@ -1291,33 +1291,90 @@ var WIKI_MAP={
   "Luverdense":"Luverdense_EC"
 };
 
+var LOGOS_MAP={
+  "Corinthians":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Corinthians_Paulista_crest.png",
+  "Flamengo":"https://commons.wikimedia.org/wiki/Special:FilePath/Flamengo_logo.svg",
+  "Palmeiras":"https://commons.wikimedia.org/wiki/Special:FilePath/Palmeiras_logo.svg",
+  "São Paulo":"https://commons.wikimedia.org/wiki/Special:FilePath/S%C3%A3o_Paulo_FC_logo.svg",
+  "Santos":"https://commons.wikimedia.org/wiki/Special:FilePath/Santos_FC_logo.svg",
+  "Grêmio":"https://commons.wikimedia.org/wiki/Special:FilePath/Gr%C3%AAmio_FBPA_logo.svg",
+  "Internacional":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Internacional_logo.svg",
+  "Cruzeiro":"https://commons.wikimedia.org/wiki/Special:FilePath/Cruzeiro_Esporte_Clube_crest.svg",
+  "Atlético MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
+  "Botafogo":"https://commons.wikimedia.org/wiki/Special:FilePath/Botafogo_de_Futebol_e_Regatas_logo.svg",
+  "Vasco":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_de_Regatas_Vasco_da_Gama_logo.svg",
+  "Fluminense":"https://commons.wikimedia.org/wiki/Special:FilePath/Fluminense_Football_Club_logo.svg",
+  "Athletico PR":"https://commons.wikimedia.org/wiki/Special:FilePath/Athletico_Paranaense_logo.svg",
+  "Coritiba":"https://commons.wikimedia.org/wiki/Special:FilePath/Coritiba_FBC_logo.svg",
+  "Fortaleza":"https://commons.wikimedia.org/wiki/Special:FilePath/Fortaleza_Esporte_Clube.svg",
+  "Bahia":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Bahia_logo.svg",
+  "Sport Recife":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_do_Recife_logo.svg",
+  "Ceará":"https://commons.wikimedia.org/wiki/Special:FilePath/Cear%C3%A1_Sporting_Club_logo.svg",
+  "Goiás":"https://commons.wikimedia.org/wiki/Special:FilePath/Goi%C3%A1s_Esporte_Clube_logo.svg",
+  "RB Bragantino":"https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_Bragantino_logo.svg",
+  "Cuiabá":"https://commons.wikimedia.org/wiki/Special:FilePath/Cuiab%C3%A1_Esporte_Clube_logo.svg",
+  "Vitória":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Vit%C3%B3ria_logo.svg",
+  "Criciúma":"https://commons.wikimedia.org/wiki/Special:FilePath/Crici%C3%BAma_Esporte_Clube_logo.svg",
+  "Atlético GO":"https://commons.wikimedia.org/wiki/Special:FilePath/Atl%C3%A9tico_Clube_Goianiense_logo.svg",
+  "Juventude":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Juventude_logo.svg",
+  "América MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_Futebol_Clube_(MG)_logo.svg",
+  "Chapecoense":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Chapecoense_de_Futebol_logo.svg",
+  "Ponte Preta":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Atl%C3%A9tica_Ponte_Preta_logo.svg",
+  "Figueirense":"https://commons.wikimedia.org/wiki/Special:FilePath/Figueirense_FC_logo.svg",
+  "Avaí":"https://commons.wikimedia.org/wiki/Special:FilePath/Ava%C3%AD_Futebol_Clube_logo.svg",
+  "Portuguesa":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos_logo.svg",
+  "Boca Juniors":"https://commons.wikimedia.org/wiki/Special:FilePath/Escudo_del_Club_Atl%C3%A9tico_Boca_Juniors.svg",
+  "River Plate":"https://commons.wikimedia.org/wiki/Special:FilePath/River_Plate_logo.svg",
+  "San Lorenzo":"https://commons.wikimedia.org/wiki/Special:FilePath/San_Lorenzo_de_Almagro_logo.svg",
+  "Independiente":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Atletico_Independiente_logo.svg",
+  "Racing Club":"https://commons.wikimedia.org/wiki/Special:FilePath/Racing_Club_de_Avellaneda_logo.svg",
+  "Nacional URU":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Nacional_de_Football_logo.svg",
+  "Peñarol":"https://commons.wikimedia.org/wiki/Special:FilePath/Pe%C3%B1arol_logo.svg",
+  "Cerro Porteño":"https://commons.wikimedia.org/wiki/Special:FilePath/Cerro_Porte%C3%B1o_logo.svg",
+  "Olimpia":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Olimpia_logo.svg",
+  "Libertad":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Libertad_logo.svg",
+  "Guaraní - PAR":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Guaran%C3%AD_logo.svg",
+  "LDU Quito":"https://commons.wikimedia.org/wiki/Special:FilePath/LDU_de_Quito_logo.svg",
+  "Independiente del Valle":"https://commons.wikimedia.org/wiki/Special:FilePath/Independiente_del_Valle_logo.svg",
+  "Colo-Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg",
+  "Universidad de Chile":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Universidad_de_Chile_logo.svg",
+  "Deportivo Cali":"https://commons.wikimedia.org/wiki/Special:FilePath/Deportivo_Cali_logo.svg",
+  "América de Cali":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_de_Cali_logo.svg",
+  "Atlético Nacional":"https://commons.wikimedia.org/wiki/Special:FilePath/Atletico_Nacional_logo.svg",
+  "Santa Fé":"https://commons.wikimedia.org/wiki/Special:FilePath/Independiente_Santa_Fe_logo.svg",
+  "Once Caldas":"https://commons.wikimedia.org/wiki/Special:FilePath/Once_Caldas_logo.svg",
+  "Alianza Lima":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Alianza_Lima_logo.svg",
+  "Universitario":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Universitario_de_Deportes_logo.svg",
+  "Colo Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg"
+};
+
 async function searchLogoWiki(teamName){
-  var title=WIKI_MAP[teamName];
-  if(!title){
-    // Try case-insensitive match
-    var lower=teamName.toLowerCase();
-    var key=Object.keys(WIKI_MAP).find(function(k){return k.toLowerCase()===lower;});
-    if(key) title=WIKI_MAP[key];
-  }
-  // If still no title, try searching by team name directly
-  var titlesToTry=title?[title]:[teamName];
+  // 1. Check direct URL map first (Wikimedia Commons - no API needed)
+  if(LOGOS_MAP[teamName]) return LOGOS_MAP[teamName];
   
-  for(var ti=0;ti<titlesToTry.length;ti++){
-    var t=titlesToTry[ti];
-    var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(t)+'&prop=pageimages&format=json&pithumbsize=300&origin=*';
-    try{
-      var resp=await fetch(url);
-      var data=await resp.json();
-      var pages=data.query&&data.query.pages;
-      if(!pages) continue;
-      var page=Object.values(pages)[0];
-      // Skip if page not found (-1) or no image
-      if(page.missing!==undefined) continue;
-      var img=page.thumbnail&&page.thumbnail.source;
-      if(img) return img;
-    }catch(e){continue;}
+  // 2. Try case-insensitive match
+  var lower=teamName.toLowerCase();
+  var key=Object.keys(LOGOS_MAP).find(function(k){return k.toLowerCase()===lower;});
+  if(key) return LOGOS_MAP[key];
+  
+  // 3. Fallback: Wikipedia pageimages API (works in browser)
+  var wikiTitle=WIKI_MAP[teamName];
+  if(!wikiTitle){
+    var wkey=Object.keys(WIKI_MAP).find(function(k){return k.toLowerCase()===lower;});
+    if(wkey) wikiTitle=WIKI_MAP[wkey];
   }
-  return null;
+  if(!wikiTitle) return null;
+  
+  try{
+    var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(wikiTitle)+'&prop=pageimages&format=json&pithumbsize=300&origin=*';
+    var resp=await fetch(url);
+    var data=await resp.json();
+    var pages=data.query&&data.query.pages;
+    if(!pages) return null;
+    var page=Object.values(pages)[0];
+    if(page.missing!==undefined) return null;
+    return page.thumbnail&&page.thumbnail.source||null;
+  }catch(e){return null;}
 }
 
 async function previewTeamLogo(input, previewId){
