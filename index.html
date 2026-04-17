@@ -285,7 +285,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
   <div class="tabs">
     <button class="tab active" data-tab="stats" onclick="switchTab('stats')">Estatísticas</button>
-    <button class="tab" data-tab="grafico" onclick="switchTab('grafico')">📊 Por Ano</button>
     <button class="tab" data-tab="artilharia" onclick="switchTab('artilharia')">Artilharia</button>
     <button class="tab" data-tab="retrospecto" onclick="switchTab('retrospecto')">Retrospecto</button>
     <button class="tab" data-tab="competicoes" onclick="switchTab('competicoes')">Competições</button>
@@ -305,15 +304,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div id="best-block"></div>
         </div>
         <div class="streak-grid" id="streak-grid" style="margin-top:1rem"></div>
+        <div style="margin-top:1.5rem">
+          <div class="sec-label" style="margin-bottom:.3rem">Presença por ano</div>
+          <div class="chart-wrap"><canvas id="chart-anos" height="100"></canvas></div>
+        </div>
       </div>
     </div>
-    <div id="tab-grafico" class="pane">
-      <div class="max">
-        <div class="sec-label">Evolução da presença</div>
-        <div class="sec-title">Jogos por Ano</div>
-        <div class="chart-wrap"><canvas id="chart-anos" height="120"></canvas></div>
-      </div>
-    </div>
+
     <div id="tab-artilharia" class="pane">
       <div class="max">
         <div class="sec-label">Quem me fez gritar</div>
@@ -595,9 +592,11 @@ async function initSupabase(){
   if(splash) splash.classList.add('hide');
   document.getElementById('app').style.display='none';
   
-  // Handle redirect back from Google OAuth
-  if(window.location.hash.includes('access_token')){
-    await new Promise(function(r){setTimeout(r,600);});
+  // Handle redirect back from Google OAuth (implicit flow)
+  if(window.location.hash.includes('access_token')||window.location.hash.includes('error_description')){
+    await new Promise(function(r){setTimeout(r,800);});
+    // Clean URL hash without reload
+    try{history.replaceState(null,'',window.location.pathname+window.location.search);}catch(e){}
   }
   
   var {data:{session},error}=await sp.auth.getSession();
@@ -647,6 +646,8 @@ async function loginWithGoogle(){
 async function logout(){
   var sp=getSupa(); if(!sp) return;
   await sp.auth.signOut();
+  // Force full reload to clear all state
+  window.location.reload();
 }
 
 async function showApp(){
@@ -771,7 +772,6 @@ function switchTab(id){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===id);});
   document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+id);});
   if(id==='stats') renderStats();
-  if(id==='grafico') renderGrafico();
   if(id==='artilharia') renderArt();
   if(id==='retrospecto') renderRetro();
   if(id==='competicoes') renderComps();
@@ -823,6 +823,8 @@ function renderStats(){
     +'<div class="streak-card"><div class="streak-num" style="color:var(--draw)">'+mU+'</div><div class="streak-lbl">Maior invencibilidade</div></div>'
     +'<div class="streak-card"><div class="kpi-lbl" style="margin-bottom:.5rem">Últimos '+recent.length+' jogos</div>'
     +'<div class="dots-row">'+recent.map(function(g){return '<div class="dot d'+g.res+'" title="'+(g.res==='V'?'Vitória':g.res==='E'?'Empate':'Derrota')+'"></div>';}).join('')+'</div></div>';
+  // Render year chart inline in stats
+  setTimeout(renderGrafico, 50);
 }
 
 // ── ARTILHARIA ──
@@ -1035,7 +1037,7 @@ function openForm(){
 }
 function editGame(id){
   var g=games.find(function(x){return x.id===id;}); if(!g) return;
-  editId=id; pendGols=g.gols.slice();pendBadges=(g.badges||[]).slice();pendPessoas=(g.com_quem||[]).slice();
+  editId=id; pendGols=g.gols.slice();pendBadges=(g.badges||[]).slice();pendPessoas=(g.com_quem||[]).map(String);
   document.getElementById('form-title').textContent='Editar Jogo';
   document.getElementById('f-data').value=g.data;
   document.getElementById('f-campeonato').value=g.camp;
@@ -1148,21 +1150,23 @@ function refreshPessoasCheckUI(){
   var btns='';
   for(var pi=0;pi<pessoas.length;pi++){
     var p=pessoas[pi];
-    var on=pendPessoas.indexOf(p.id)>=0;
+    var on=pendPessoas.map(String).indexOf(String(p.id))>=0;
     var cls='pessoa-check-btn'+(on?' on':'');
     btns+='<button class="'+cls+'" data-pid="'+p.id+'" onclick="togglePessoaCheck(this.dataset.pid)">'+(p.emoji||'\u{1F464}')+' '+p.nome+'</button>';
   }
   el.innerHTML=btns;
 }
 function togglePessoaCheck(id){
-  var i=pendPessoas.indexOf(id);
+  id=String(id);
+  var i=pendPessoas.map(String).indexOf(id);
   if(i>=0)pendPessoas.splice(i,1);else pendPessoas.push(id);
   refreshPessoasCheckUI();
 }
 function renderPessoas(){
   var g=document.getElementById('pessoas-grid');if(!g)return;
   var cards=pessoas.map(function(p){
-    var c=games.filter(function(j){return j.com_quem&&j.com_quem.indexOf(p.id)>=0;}).length;
+    var pid=String(p.id);
+    var c=games.filter(function(j){return j.com_quem&&j.com_quem.map(String).indexOf(pid)>=0;}).length;
     return'<div class="pessoa-card"><div class="pessoa-emoji">'+(p.emoji||'👤')+'</div>'
       +'<div><div class="pessoa-nome">'+esc(p.nome)+'</div>'
       +'<div style="display:flex;align-items:baseline;gap:.3rem"><span class="pessoa-count">'+c+'</span>'
@@ -1270,7 +1274,6 @@ function renderEstadios(){
 // ── RENDER ALL ──
 function renderAll(){
   renderStats();
-  if(document.getElementById('tab-grafico').classList.contains('active')) renderGrafico();
   if(document.getElementById('tab-artilharia').classList.contains('active')) renderArt();
   if(document.getElementById('tab-retrospecto').classList.contains('active')) renderRetro();
   if(document.getElementById('tab-competicoes').classList.contains('active')) renderComps();
