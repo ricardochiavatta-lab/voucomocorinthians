@@ -483,7 +483,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 // ── LOGOS ──
 const ESPN={};
-function getLogo(t){return CUSTOM[t]||LOGOS_MAP[t]||null;}
+function getLogo(t){return CUSTOM[t]||null;}
 function setCustomLogo(team,url){CUSTOM[team]=url;saveLogos();renderAll();toast('Logo de '+team+' atualizado! 🎨');}
 function logoHtml(team,size){
   size=size||38;
@@ -568,8 +568,15 @@ var PER=15;
 var currentUser=null;
 var pessoas=[];
 
-function saveLogos(){lsSet(LS_LOGOS,CUSTOM);}
-function saveCompIcons(){lsSet(LS_COMP_ICONS,COMP_ICONS);}
+function saveLogos(){
+  lsSet(LS_LOGOS,CUSTOM);
+  // Also persist to Supabase
+  saveUserSetting('logos', CUSTOM);
+}
+function saveCompIcons(){
+  lsSet(LS_COMP_ICONS,COMP_ICONS);
+  saveUserSetting('comp_icons', COMP_ICONS);
+}
 
 // ── AUTH ──
 async function initSupabase(){
@@ -661,6 +668,7 @@ async function showApp(){
     chip.innerHTML=(av?'<img src="'+av+'" alt="">':'')+'<span>'+nm+'</span>'
       +'<button class="btn-logout" onclick="logout()">Sair</button>';
   }
+  await loadUserSettings();
   await loadGames();
   await loadPessoas();
   document.getElementById('app').style.display='';
@@ -901,7 +909,9 @@ function showRetroDetail(team){
     return '<div class="detail-row"><span class="res-badge r'+g.res+'">'+g.res+'</span>'
       +'<span style="font-size:.78rem;color:var(--muted);min-width:80px">'+fmt(g.data)+'</span>'
       +'<span class="placar-f">'+esc(g.mandante)+' '+g.gp+'×'+g.gc+' '+esc(g.visitante)+'</span>'
-      +'<span class="pill">'+esc(g.camp)+'</span>'+gs+'</div>';
+      +'<span class="pill">'+esc(g.camp)+'</span>'
+      +(g.setor?'<span class="chip" style="font-size:.7rem">📍 '+esc(g.setor)+'</span>':'')
+      +gs+'</div>';
   }).join('');
   document.getElementById('detail-ttl').textContent=team;
   document.getElementById('detail-body').innerHTML=
@@ -1246,181 +1256,109 @@ function renderGrafico(){
 var WIKI_MAP={
   "Corinthians":"Sport_Club_Corinthians_Paulista",
   "Flamengo":"Clube_de_Regatas_do_Flamengo",
-  "Palmeiras":"Palmeiras",
-  "São Paulo":"São_Paulo_FC",
-  "Santos":"Santos_FC",
-  "Grêmio":"Grêmio_FBPA",
+  "Palmeiras":"Sociedade_Esportiva_Palmeiras",
+  "São Paulo":"S%C3%A3o_Paulo_Futebol_Clube",
+  "Santos":"Santos_Futebol_Clube",
+  "Grêmio":"Gr%C3%AAmio_Foot-Ball_Porto_Alegrense",
   "Internacional":"Sport_Club_Internacional",
   "Cruzeiro":"Cruzeiro_Esporte_Clube",
-  "Atlético MG":"Clube_Atlético_Mineiro",
+  "Atlético MG":"Clube_Atl%C3%A9tico_Mineiro",
   "Botafogo":"Botafogo_de_Futebol_e_Regatas",
   "Vasco":"Club_de_Regatas_Vasco_da_Gama",
-  "Fluminense":"Fluminense_FC",
+  "Fluminense":"Fluminense_Football_Club",
   "Athletico PR":"Club_Athletico_Paranaense",
-  "Coritiba":"Coritiba_FBC",
-  "Fortaleza":"Fortaleza_EC",
+  "Coritiba":"Coritiba_Foot_Ball_Club",
+  "Fortaleza":"Fortaleza_Esporte_Clube",
   "Bahia":"Esporte_Clube_Bahia",
   "Sport Recife":"Sport_Club_do_Recife",
-  "Ceará":"Ceará_SC",
-  "Goiás":"Goiás_EC",
+  "Ceará":"Cear%C3%A1_Sporting_Club",
+  "Goiás":"Goi%C3%A1s_Esporte_Clube",
   "RB Bragantino":"Red_Bull_Bragantino",
-  "Cuiabá":"Cuiabá_EC",
-  "Vitória":"Esporte_Clube_Vitória",
-  "Criciúma":"Criciúma_EC",
-  "Atlético GO":"Atlético_Clube_Goianiense",
+  "Cuiabá":"Cuiab%C3%A1_Esporte_Clube",
+  "Vitória":"Esporte_Clube_Vit%C3%B3ria",
+  "Criciúma":"Crici%C3%BAma_Esporte_Clube",
+  "Atlético GO":"Atl%C3%A9tico_Clube_Goianiense",
   "Juventude":"Esporte_Clube_Juventude",
-  "América MG":"América_Mineiro",
-  "Chapecoense":"Associação_Chapecoense_de_Futebol",
-  "Ponte Preta":"Associação_Atlética_Ponte_Preta",
-  "Figueirense":"Figueirense_FC",
-  "Avaí":"Avaí_FC",
-  "Boca Juniors":"Boca_Juniors",
-  "River Plate":"River_Plate",
+  "América MG":"Am%C3%A9rica_Futebol_Clube_(MG)",
+  "Chapecoense":"Associa%C3%A7%C3%A3o_Chapecoense_de_Futebol",
+  "Ponte Preta":"Associa%C3%A7%C3%A3o_Atl%C3%A9tica_Ponte_Preta",
+  "Figueirense":"Figueirense_Futebol_Clube",
+  "Avaí":"Ava%C3%AD_Futebol_Clube",
+  "Portuguesa":"Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos",
+  "Portuguesa - RJ":"Portuguesa_(RJ)",
+  "Botafogo (SP)":"Botafogo_Futebol_Clube_(Ribeir%C3%A3o_Preto)",
+  "Ferroviária":"Associa%C3%A7%C3%A3o_Ferrovi%C3%A1ria_de_Esportes",
+  "Joinville":"Joinville_Esporte_Clube",
+  "Luverdense":"Luverdense_Esporte_Clube",
+  "Marília":"Mar%C3%ADlia_Atl%C3%A9tico_Clube",
+  "Penapolense":"Associa%C3%A7%C3%A3o_Esportiva_Penapolense",
+  "Remo":"Clube_do_Remo",
+  "América RN":"Am%C3%A9rica_Futebol_Clube_(Natal)",
+  "Red Bull Brasil":"Red_Bull_Bragantino",
+  "Boca Juniors":"Club_Atl%C3%A9tico_Boca_Juniors",
+  "River Plate":"Club_Atl%C3%A9tico_River_Plate",
   "San Lorenzo":"San_Lorenzo_de_Almagro",
-  "Independiente":"Club_Atlético_Independiente",
+  "Independiente":"Club_Atl%C3%A9tico_Independiente",
   "Racing Club":"Racing_Club_de_Avellaneda",
   "Nacional URU":"Club_Nacional_de_Football",
-  "Peñarol":"Club_Atlético_Peñarol",
-  "Cerro Porteño":"Club_Cerro_Porteño",
+  "Peñarol":"Club_Atl%C3%A9tico_Pe%C3%B1arol",
+  "Cerro Porteño":"Club_Cerro_Porte%C3%B1o",
   "Olimpia":"Club_Olimpia",
   "Libertad":"Club_Libertad",
-  "Guaraní - PAR":"Club_Guaraní",
+  "Guaraní - PAR":"Club_Guaran%C3%AD",
+  "Nacional (PAR)":"Club_Nacional_(Paraguay)",
   "LDU Quito":"Liga_Deportiva_Universitaria_de_Quito",
   "Independiente del Valle":"Independiente_del_Valle",
   "Colo-Colo":"Colo-Colo",
   "Universidad de Chile":"Club_Universidad_de_Chile",
   "Deportivo Cali":"Deportivo_Cali",
-  "América de Cali":"América_de_Cali",
-  "Atlético Nacional":"Atlético_Nacional",
+  "América de Cali":"Am%C3%A9rica_de_Cali",
+  "Atlético Nacional":"Atl%C3%A9tico_Nacional",
   "Santa Fé":"Independiente_Santa_Fe",
   "Once Caldas":"Once_Caldas",
   "Alianza Lima":"Club_Alianza_Lima",
   "Universitario":"Club_Universitario_de_Deportes",
   "Danubio":"Danubio_FC",
   "Always Ready":"Club_Always_Ready",
-  "Remo":"Clube_do_Remo",
-  "Ferroviária":"Associação_Ferroviária_de_Esportes",
   "Racing (URU)":"Racing_Club_de_Montevideo",
-  "Portuguesa":"Associação_Portuguesa_de_Desportos",
-  "Portuguesa - RJ":"Portuguesa_(RJ)",
-  "Botafogo (SP)":"Botafogo_FC_(Ribeirão_Preto)",
-  "Argentino Juniors":"Club_Atlético_Argentinos_Juniors",
-  "América RN":"América_Futebol_Clube_(Natal)",
-  "Nacional (PAR)":"Club_Nacional_(Paraguay)",
-  "Marília":"Marília_AC",
-  "Penapolense":"Associação_Esportiva_Penapolense",
-  "Joinville":"Joinville_EC",
-  "Luverdense":"Luverdense_EC"
+  "Argentino Juniors":"Club_Atl%C3%A9tico_Argentinos_Juniors"
 };
 
-var LOGOS_MAP={
-  "Corinthians":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Corinthians_Paulista_crest.png",
-  "Flamengo":"https://commons.wikimedia.org/wiki/Special:FilePath/Flamengo_logo.svg",
-  "Palmeiras":"https://commons.wikimedia.org/wiki/Special:FilePath/Palmeiras_logo.svg",
-  "São Paulo":"https://commons.wikimedia.org/wiki/Special:FilePath/S%C3%A3o_Paulo_FC_logo.svg",
-  "Santos":"https://commons.wikimedia.org/wiki/Special:FilePath/Santos_FC_logo.svg",
-  "Grêmio":"https://commons.wikimedia.org/wiki/Special:FilePath/Gr%C3%AAmio_FBPA_logo.svg",
-  "Internacional":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Internacional_logo.svg",
-  "Cruzeiro":"https://commons.wikimedia.org/wiki/Special:FilePath/Cruzeiro_Esporte_Clube_crest.svg",
-  "Atlético MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
-  "Botafogo":"https://commons.wikimedia.org/wiki/Special:FilePath/Botafogo_de_Futebol_e_Regatas_logo.svg",
-  "Vasco":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_de_Regatas_Vasco_da_Gama_logo.svg",
-  "Fluminense":"https://commons.wikimedia.org/wiki/Special:FilePath/Fluminense_Football_Club_logo.svg",
-  "Athletico PR":"https://commons.wikimedia.org/wiki/Special:FilePath/Athletico_Paranaense_logo.svg",
-  "Coritiba":"https://commons.wikimedia.org/wiki/Special:FilePath/Coritiba_FBC_logo.svg",
-  "Fortaleza":"https://commons.wikimedia.org/wiki/Special:FilePath/Fortaleza_Esporte_Clube.svg",
-  "Bahia":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Bahia_logo.svg",
-  "Sport Recife":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_do_Recife_logo.svg",
-  "Ceará":"https://commons.wikimedia.org/wiki/Special:FilePath/Cear%C3%A1_Sporting_Club_logo.svg",
-  "Goiás":"https://commons.wikimedia.org/wiki/Special:FilePath/Goi%C3%A1s_Esporte_Clube_logo.svg",
-  "RB Bragantino":"https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_Bragantino_logo.svg",
-  "Cuiabá":"https://commons.wikimedia.org/wiki/Special:FilePath/Cuiab%C3%A1_Esporte_Clube_logo.svg",
-  "Vitória":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Vit%C3%B3ria_logo.svg",
-  "Criciúma":"https://commons.wikimedia.org/wiki/Special:FilePath/Crici%C3%BAma_Esporte_Clube_logo.svg",
-  "Atlético GO":"https://commons.wikimedia.org/wiki/Special:FilePath/Atl%C3%A9tico_Clube_Goianiense_logo.svg",
-  "Juventude":"https://commons.wikimedia.org/wiki/Special:FilePath/Esporte_Clube_Juventude_logo.svg",
-  "América MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_Futebol_Clube_(MG)_logo.svg",
-  "Chapecoense":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Chapecoense_de_Futebol_logo.svg",
-  "Ponte Preta":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Atl%C3%A9tica_Ponte_Preta_logo.svg",
-  "Figueirense":"https://commons.wikimedia.org/wiki/Special:FilePath/Figueirense_FC_logo.svg",
-  "Avaí":"https://commons.wikimedia.org/wiki/Special:FilePath/Ava%C3%AD_Futebol_Clube_logo.svg",
-  "Portuguesa":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos_logo.svg",
-  "Boca Juniors":"https://commons.wikimedia.org/wiki/Special:FilePath/Escudo_del_Club_Atl%C3%A9tico_Boca_Juniors.svg",
-  "River Plate":"https://commons.wikimedia.org/wiki/Special:FilePath/River_Plate_logo.svg",
-  "San Lorenzo":"https://commons.wikimedia.org/wiki/Special:FilePath/San_Lorenzo_de_Almagro_logo.svg",
-  "Independiente":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Atletico_Independiente_logo.svg",
-  "Racing Club":"https://commons.wikimedia.org/wiki/Special:FilePath/Racing_Club_de_Avellaneda_logo.svg",
-  "Nacional URU":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Nacional_de_Football_logo.svg",
-  "Peñarol":"https://commons.wikimedia.org/wiki/Special:FilePath/Pe%C3%B1arol_logo.svg",
-  "Cerro Porteño":"https://commons.wikimedia.org/wiki/Special:FilePath/Cerro_Porte%C3%B1o_logo.svg",
-  "Olimpia":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Olimpia_logo.svg",
-  "Libertad":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Libertad_logo.svg",
-  "Guaraní - PAR":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Guaran%C3%AD_logo.svg",
-  "LDU Quito":"https://commons.wikimedia.org/wiki/Special:FilePath/LDU_de_Quito_logo.svg",
-  "Independiente del Valle":"https://commons.wikimedia.org/wiki/Special:FilePath/Independiente_del_Valle_logo.svg",
-  "Colo-Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg",
-  "Universidad de Chile":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Universidad_de_Chile_logo.svg",
-  "Deportivo Cali":"https://commons.wikimedia.org/wiki/Special:FilePath/Deportivo_Cali_logo.svg",
-  "América de Cali":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_de_Cali_logo.svg",
-  "Atlético Nacional":"https://commons.wikimedia.org/wiki/Special:FilePath/Atletico_Nacional_logo.svg",
-  "Santa Fé":"https://commons.wikimedia.org/wiki/Special:FilePath/Independiente_Santa_Fe_logo.svg",
-  "Once Caldas":"https://commons.wikimedia.org/wiki/Special:FilePath/Once_Caldas_logo.svg",
-  "Alianza Lima":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Alianza_Lima_logo.svg",
-  "Universitario":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Universitario_de_Deportes_logo.svg",
-  "Colo Colo":"https://commons.wikimedia.org/wiki/Special:FilePath/Colo-Colo_logo.svg",
-  "Ferroviária":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Ferrovi%C3%A1ria_de_Esportes_logo.svg",
-  "Botafogo (SP)":"https://commons.wikimedia.org/wiki/Special:FilePath/Botafogo_Futebol_Clube_(Ribeir%C3%A3o_Preto)_logo.svg",
-  "Portuguesa - RJ":"https://commons.wikimedia.org/wiki/Special:FilePath/Portuguesa_do_Rio_de_Janeiro_logo.svg",
-  "Luverdense":"https://commons.wikimedia.org/wiki/Special:FilePath/Luverdense_Esporte_Clube_logo.svg",
-  "Marília":"https://commons.wikimedia.org/wiki/Special:FilePath/Mar%C3%ADlia_Atl%C3%A9tico_Clube_logo.svg",
-  "Penapolense":"https://commons.wikimedia.org/wiki/Special:FilePath/Associa%C3%A7%C3%A3o_Esportiva_Penapolense_logo.svg",
-  "Joinville":"https://commons.wikimedia.org/wiki/Special:FilePath/Joinville_Esporte_Clube_logo.svg",
-  "Red Bull Brasil":"https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_Bragantino_logo.svg",
-  "Remo":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_do_Remo_logo.svg",
-  "América RN":"https://commons.wikimedia.org/wiki/Special:FilePath/Am%C3%A9rica_Futebol_Clube_(Natal)_logo.svg",
-  "Danubio":"https://commons.wikimedia.org/wiki/Special:FilePath/Danubio_FC_logo.svg",
-  "Always Ready":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Always_Ready_logo.svg",
-  "Racing (URU)":"https://commons.wikimedia.org/wiki/Special:FilePath/Racing_Club_de_Montevideo_logo.svg",
-  "Nacional (PAR)":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Nacional_(Paraguay)_logo.svg",
-  "Argentino Juniors":"https://commons.wikimedia.org/wiki/Special:FilePath/Club_Atl%C3%A9tico_Argentinos_Juniors_logo.svg",
-  "UCV":"https://commons.wikimedia.org/wiki/Special:FilePath/Universidad_C%C3%A9sar_Vallejo_logo.svg",
-  "Atlético-MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
-  "Atletico MG":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
-  "Athletico-PR":"https://commons.wikimedia.org/wiki/Special:FilePath/Athletico_Paranaense_logo.svg",
-  "Atlético Mineiro":"https://commons.wikimedia.org/wiki/Special:FilePath/Clube_Atletico_Mineiro_crest.svg",
-  "Atlético-GO":"https://commons.wikimedia.org/wiki/Special:FilePath/Atl%C3%A9tico_Clube_Goianiense_logo.svg",
-  "Grêmio FBPA":"https://commons.wikimedia.org/wiki/Special:FilePath/Gr%C3%AAmio_FBPA_logo.svg",
-  "S.C. Corinthians":"https://commons.wikimedia.org/wiki/Special:FilePath/Sport_Club_Corinthians_Paulista_crest.png",
-  "Flamengo RJ":"https://commons.wikimedia.org/wiki/Special:FilePath/Flamengo_logo.svg"
-};
+var LOGOS_MAP={};
 
 async function searchLogoWiki(teamName){
-  // 1. Check direct URL map first (Wikimedia Commons - no API needed)
+  // 1. Check LOGOS_MAP (direct Wikimedia URLs)
   if(LOGOS_MAP[teamName]) return LOGOS_MAP[teamName];
-  
-  // 2. Try case-insensitive match
   var lower=teamName.toLowerCase();
-  var key=Object.keys(LOGOS_MAP).find(function(k){return k.toLowerCase()===lower;});
-  if(key) return LOGOS_MAP[key];
-  
-  // 3. Fallback: Wikipedia pageimages API (works in browser)
+  var k=Object.keys(LOGOS_MAP).find(function(x){return x.toLowerCase()===lower;});
+  if(k) return LOGOS_MAP[k];
+
+  // 2. Try PT Wikipedia API (common names, works in browser)
   var wikiTitle=WIKI_MAP[teamName];
   if(!wikiTitle){
-    var wkey=Object.keys(WIKI_MAP).find(function(k){return k.toLowerCase()===lower;});
-    if(wkey) wikiTitle=WIKI_MAP[wkey];
+    var wk=Object.keys(WIKI_MAP).find(function(x){return x.toLowerCase()===lower;});
+    if(wk) wikiTitle=WIKI_MAP[wk];
   }
   if(!wikiTitle) return null;
-  
-  try{
-    var url='https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(wikiTitle)+'&prop=pageimages&format=json&pithumbsize=300&origin=*';
-    var resp=await fetch(url);
-    var data=await resp.json();
-    var pages=data.query&&data.query.pages;
-    if(!pages) return null;
-    var page=Object.values(pages)[0];
-    if(page.missing!==undefined) return null;
-    return page.thumbnail&&page.thumbnail.source||null;
-  }catch(e){return null;}
+
+  // Try PT Wikipedia first (better for Brazilian teams)
+  var wikis=[
+    'https://pt.wikipedia.org/w/api.php?action=query&titles='+wikiTitle+'&prop=pageimages&format=json&pithumbsize=300&origin=*',
+    'https://en.wikipedia.org/w/api.php?action=query&titles='+wikiTitle+'&prop=pageimages&format=json&pithumbsize=300&origin=*'
+  ];
+  for(var i=0;i<wikis.length;i++){
+    try{
+      var resp=await fetch(wikis[i]);
+      var data=await resp.json();
+      var pages=data.query&&data.query.pages;
+      if(!pages) continue;
+      var page=Object.values(pages)[0];
+      if(page.missing!==undefined) continue;
+      var img=page.thumbnail&&page.thumbnail.source;
+      if(img) return img;
+    }catch(e){continue;}
+  }
+  return null;
 }
 
 async function previewTeamLogo(input, previewId){
@@ -1468,6 +1406,39 @@ async function autoSearchLogo(){
   }
 }
 
+
+// ── USER SETTINGS (logos, comp icons) → Supabase ──
+async function saveUserSetting(key, value){
+  if(!currentUser) return;
+  var sp=getSupa();
+  var json=JSON.stringify(value);
+  // Upsert into user_settings table
+  await sp.from('user_settings').upsert({
+    user_id:currentUser.id,
+    key:key,
+    value:json
+  },{onConflict:'user_id,key'});
+}
+
+async function loadUserSettings(){
+  if(!currentUser) return;
+  var sp=getSupa();
+  var {data,error}=await sp.from('user_settings').select('*').eq('user_id',currentUser.id);
+  if(error||!data) return;
+  data.forEach(function(row){
+    try{
+      var val=JSON.parse(row.value);
+      if(row.key==='logos'){
+        CUSTOM=Object.assign({},CUSTOM,val);
+        lsSet(LS_LOGOS,CUSTOM);
+      } else if(row.key==='comp_icons'){
+        COMP_ICONS=Object.assign({},COMP_ICONS,val);
+        lsSet(LS_COMP_ICONS,COMP_ICONS);
+      }
+    }catch(e){}
+  });
+}
+
 function renderEstadios(){
   var m={};
   games.forEach(function(g){
@@ -1494,6 +1465,7 @@ function renderEstadios(){
         +'<span style="font-size:.78rem;color:var(--muted);min-width:80px">'+fmt(g.data)+'</span>'
         +'<span class="placar-f">'+esc(g.mandante)+' '+g.gp+'×'+g.gc+' '+esc(g.visitante)+'</span>'
         +'<span class="pill">'+esc(g.camp)+'</span>'
+        +(g.setor?'<span class="chip" style="font-size:.7rem">📍 '+esc(g.setor)+'</span>':'')
         +gs+'</div>';
     }).join('');
     var pct=est.jogos.length?((est.v*3+est.emp)/(est.jogos.length*3)*100).toFixed(0):0;
