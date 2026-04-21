@@ -1469,7 +1469,9 @@ var _coriId=131;
 var _matchSearchTimer=null;
 
 function onFormDateChange(){
-  var adv=document.getElementById('f-adversario').value.trim();
+  var advEl=document.getElementById('f-adversario');
+  if(!advEl) return;
+  var adv=advEl.value.trim();
   if(adv.length>=3) triggerMatchSearch();
 }
 
@@ -1488,12 +1490,17 @@ function closeMatchPanel(){
 }
 
 async function triggerMatchSearch(){
-  var date=document.getElementById('f-data').value;
-  var adv=document.getElementById('f-adversario').value.trim();
+  var dataEl=document.getElementById('f-data');
+  var advEl=document.getElementById('f-adversario');
+  var panelEl=document.getElementById('match-search-panel');
+  if(!dataEl||!advEl||!panelEl) return;
+  var date=dataEl.value;
+  var adv=advEl.value.trim();
   if(!date||!adv||adv.length<3) return;
   
-  var panel=document.getElementById('match-search-panel');
+  var panel=panelEl;
   var results=document.getElementById('match-results');
+  if(!results) return;
   panel.classList.add('visible');
   results.innerHTML='<div class="api-search-status">⏳ Buscando partidas...</div>';
   
