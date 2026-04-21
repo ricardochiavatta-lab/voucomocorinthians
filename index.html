@@ -1514,7 +1514,7 @@ async function triggerMatchSearch(){
   try{
     // Search fixtures by date and team
     var url='https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures&params=team='+_coriId+'%26date='+date;
-    var resp=await fetch(url);
+    var resp=await fetch(url,{headers:{'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwanZweHF6aWlhbnVqb2NlYXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NDQ0NjAsImV4cCI6MjA5MjAyMDQ2MH0.UIKq1ahneB_jaFGndk3ns12yM4vIggJ7N53CYV6r7Dk'}});
     var data=await resp.json();
     var fixtures=data.response||[];
     
@@ -1523,7 +1523,7 @@ async function triggerMatchSearch(){
       var d=new Date(date+'T12:00:00');
       d.setDate(d.getDate()-1);
       var date2=d.toISOString().slice(0,10);
-      var resp2=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures&params=team='+_coriId+'%26date='+date2);
+      var resp2=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures&params=team='+_coriId+'%26date='+date2,{headers:{'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwanZweHF6aWlhbnVqb2NlYXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NDQ0NjAsImV4cCI6MjA5MjAyMDQ2MH0.UIKq1ahneB_jaFGndk3ns12yM4vIggJ7N53CYV6r7Dk'}});
       var data2=await resp2.json();
       fixtures=data2.response||[];
     }
@@ -1589,7 +1589,7 @@ async function fetchGoalsForFixtures(fixtures){
   for(var i=0;i<Math.min(fixtures.length,3);i++){
     var f=fixtures[i];
     try{
-      var resp=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures/events&params=fixture='+f.fixture.id);
+      var resp=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures/events&params=fixture='+f.fixture.id,{headers:{'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwanZweHF6aWlhbnVqb2NlYXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NDQ0NjAsImV4cCI6MjA5MjAyMDQ2MH0.UIKq1ahneB_jaFGndk3ns12yM4vIggJ7N53CYV6r7Dk'}});
       var data=await resp.json();
       var events=data.response||[];
       var goals=events
