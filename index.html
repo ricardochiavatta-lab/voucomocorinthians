@@ -253,6 +253,18 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .logo-sug-item:hover{border-color:var(--gold)}
 .logo-sug-item img{width:22px;height:22px;object-fit:contain}
 
+
+/* ── API FOOTBALL MATCH SEARCH ── */
+.match-search-panel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:.5rem;display:none}
+.match-search-panel.visible{display:block}
+.match-result-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;cursor:pointer;transition:all .2s;gap:.75rem}
+.match-result-item:hover{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.match-result-score{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);text-align:center;min-width:60px}
+.match-result-info{font-size:.78rem;color:var(--muted);text-align:center}
+.match-result-teams{font-size:.82rem;font-weight:600;text-align:center}
+.btn-use-match{background:var(--gold);color:#000;border:none;border-radius:4px;padding:.3rem .8rem;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap}
+.api-search-status{font-size:.78rem;color:var(--muted);text-align:center;padding:.5rem}
+
 </style>
 </head>
 <body>
@@ -393,7 +405,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="modal-x" onclick="closeOverlay('form-modal')">&#x2715;</button>
     </div>
     <div class="form-grid">
-      <div class="fg"><label class="lbl">Data</label><input type="date" class="inp" id="f-data"></div>
+      <div class="fg"><label class="lbl">Data</label><input type="date" class="inp" id="f-data" onchange="onFormDateChange()"></div>
       <div class="fg"><label class="lbl">Competição</label><input type="text" class="inp" id="f-campeonato" placeholder="Ex: Brasileiro" list="dl-camp"><datalist id="dl-camp"></datalist></div>
       <div class="fg full">
         <label class="lbl">Times e Placar</label>
@@ -1448,6 +1460,203 @@ async function loadUserSettings(){
       }
     }catch(e){}
   });
+}
+
+
+// ── API-FOOTBALL INTEGRATION ──
+var _apiKey='ab2a57607ff03e281d48b8afa1256eff';
+var _coriId=131;
+var _matchSearchTimer=null;
+
+function onFormDateChange(){
+  var adv=document.getElementById('f-adversario').value.trim();
+  if(adv.length>=3) triggerMatchSearch();
+}
+
+function onFormAdvChange(){
+  var date=document.getElementById('f-data').value;
+  if(!date) return;
+  clearTimeout(_matchSearchTimer);
+  _matchSearchTimer=setTimeout(function(){
+    var adv=document.getElementById('f-adversario').value.trim();
+    if(adv.length>=3) triggerMatchSearch();
+  }, 800);
+}
+
+function closeMatchPanel(){
+  document.getElementById('match-search-panel').classList.remove('visible');
+}
+
+async function triggerMatchSearch(){
+  var date=document.getElementById('f-data').value;
+  var adv=document.getElementById('f-adversario').value.trim();
+  if(!date||!adv||adv.length<3) return;
+  
+  var panel=document.getElementById('match-search-panel');
+  var results=document.getElementById('match-results');
+  panel.classList.add('visible');
+  results.innerHTML='<div class="api-search-status">⏳ Buscando partidas...</div>';
+  
+  try{
+    // Search fixtures by date and team
+    var url='https://v3.football.api-sports.io/fixtures?team='+_coriId+'&date='+date;
+    var resp=await fetch(url,{
+      headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
+    });
+    var data=await resp.json();
+    var fixtures=data.response||[];
+    
+    if(!fixtures.length){
+      // Try ±1 day
+      var d=new Date(date+'T12:00:00');
+      d.setDate(d.getDate()-1);
+      var date2=d.toISOString().slice(0,10);
+      var resp2=await fetch('https://v3.football.api-sports.io/fixtures?team='+_coriId+'&date='+date2,{
+        headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
+      });
+      var data2=await resp2.json();
+      fixtures=data2.response||[];
+    }
+    
+    if(!fixtures.length){
+      results.innerHTML='<div class="api-search-status">Nenhuma partida encontrada nessa data.<br><span style="font-size:.7rem">Preencha manualmente.</span></div>';
+      return;
+    }
+    
+    // Filter by adversary name (fuzzy)
+    var advLow=adv.toLowerCase();
+    var filtered=fixtures.filter(function(f){
+      var home=f.teams.home.name.toLowerCase();
+      var away=f.teams.away.name.toLowerCase();
+      return home.includes(advLow)||away.includes(advLow)||
+             advLow.includes(home.split(' ')[0])||advLow.includes(away.split(' ')[0]);
+    });
+    if(!filtered.length) filtered=fixtures; // show all if no match
+    
+    results.innerHTML=filtered.map(function(f){
+      var home=f.teams.home.name;
+      var away=f.teams.away.name;
+      var gh=f.goals.home!==null?f.goals.home:'?';
+      var ga=f.goals.away!==null?f.goals.away:'?';
+      var league=f.league.name;
+      var venue=f.fixture.venue.name||'';
+      var status=f.fixture.status.short;
+      var finished=status==='FT'||status==='AET'||status==='PEN';
+      
+      // Get goalscorers
+      var goals=[];
+      if(f.events){
+        f.events.filter(function(e){return e.type==='Goal'&&e.detail!=='Missed Penalty';})
+          .forEach(function(e){goals.push(e.player.name);});
+      }
+      
+      return '<div class="match-result-item" onclick="applyMatchByIndex('+idx+')">' 
+
+
+
+        +'<div style="flex:1">'
+        +'<div class="match-result-teams">'+esc(home)+' × '+esc(away)+'</div>'
+        +'<div class="match-result-info">'+esc(league)+' · '+esc(f.fixture.date?f.fixture.date.slice(0,10):'')+'</div>'
+        +(venue?'<div class="match-result-info">📍 '+esc(venue)+'</div>':'')
+        +'</div>'
+        +'<div class="match-result-score">'+gh+'×'+ga+'</div>'
+        +'<button class="btn-use-match">Usar</button>'
+        +'</div>';
+    }).join('');
+    
+    // For each fixture, fetch events if not included
+    if(filtered[0]&&(!filtered[0].events||!filtered[0].events.length)){
+      fetchGoalsForFixture(filtered[0].fixture.id, filtered);
+    }
+    
+  }catch(e){
+    results.innerHTML='<div class="api-search-status">Erro ao buscar: '+esc(e.message)+'</div>';
+  }
+}
+
+async function fetchGoalsForFixtures(fixtures){
+  // Fetch goals for all found fixtures sequentially
+  for(var i=0;i<Math.min(fixtures.length,3);i++){
+    var f=fixtures[i];
+    try{
+      var resp=await fetch('https://v3.football.api-sports.io/fixtures/events?fixture='+f.fixture.id,{
+        headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
+      });
+      var data=await resp.json();
+      var events=data.response||[];
+      var goals=events
+        .filter(function(e){return e.type==='Goal'&&e.detail!=='Missed Penalty';})
+        .map(function(e){return e.player.name;});
+      f._goals=goals;
+    }catch(e){}
+  }
+  // Update UI to show goal info available
+  var results=document.getElementById('match-results');
+  if(results&&fixtures[0]&&fixtures[0]._goals&&fixtures[0]._goals.length){
+    var items=results.querySelectorAll('.match-result-item');
+    if(items[0]){
+      var info=items[0].querySelector('.match-result-info');
+      if(info){
+        var goalsDiv=document.createElement('div');
+        goalsDiv.className='match-result-info';
+        goalsDiv.style.color='var(--gold)';
+        goalsDiv.textContent='⚽ '+fixtures[0]._goals.join(', ');
+        info.parentNode.insertBefore(goalsDiv, info.nextSibling);
+      }
+    }
+  }
+}
+
+function applyMatchByIndex(idx){
+  var f=window._foundMatches&&window._foundMatches[idx];
+  if(!f) return;
+  var matchData={
+    home:f.teams.home.name, away:f.teams.away.name,
+    gh:f.goals.home!==null?f.goals.home:'?',
+    ga:f.goals.away!==null?f.goals.away:'?',
+    league:f.league.name,
+    venue:f.fixture.venue.name||'',
+    goals:f._goals||[]
+  };
+  applyMatch(matchData);
+}
+
+function applyMatch(matchData){
+  var isCori_home=matchData.home.toLowerCase().includes('corinthian');
+  var home=matchData.home, away=matchData.away;
+  var gh=matchData.gh, ga=matchData.ga;
+  
+  document.getElementById('f-mandante').value=home;
+  document.getElementById('f-visitante').value=away;
+  
+  if(gh!=='?'&&ga!=='?'){
+    document.getElementById('f-gp').value=isCori_home?gh:ga;
+    document.getElementById('f-gc').value=isCori_home?ga:gh;
+  }
+  
+  if(matchData.venue) document.getElementById('f-estadio').value=matchData.venue;
+  if(matchData.league){
+    // Map API league name to our format
+    var leagueMap={'Brasileirao Serie A':'Brasileiro','Copa do Brasil':'Copa do Brasil',
+      'Copa Libertadores':'Libertadores','Copa Sudamericana':'Sul-Americana',
+      'Recopa Sudamericana':'Recopa','Paulista - A1':'Paulista','Supercopa do Brasil':'Supercopa'};
+    var camp=leagueMap[matchData.league]||matchData.league;
+    document.getElementById('f-campeonato').value=camp;
+  }
+  
+  // Fill goals
+  if(matchData.goals&&matchData.goals.length){
+    pendGols=matchData.goals.slice();
+    refreshGolsArea();
+  }
+  
+  closeMatchPanel();
+  
+  // Preview logos
+  previewTeamLogo(document.getElementById('f-mandante'),'prev-mand');
+  previewTeamLogo(document.getElementById('f-visitante'),'prev-visit');
+  
+  toast('✅ Partida aplicada! Confira e salve.');
 }
 
 function renderEstadios(){
