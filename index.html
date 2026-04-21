@@ -1513,10 +1513,8 @@ async function triggerMatchSearch(){
   
   try{
     // Search fixtures by date and team
-    var url='https://v3.football.api-sports.io/fixtures?team='+_coriId+'&date='+date;
-    var resp=await fetch(url,{
-      headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
-    });
+    var url='https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures&params=team='+_coriId+'%26date='+date;
+    var resp=await fetch(url);
     var data=await resp.json();
     var fixtures=data.response||[];
     
@@ -1525,9 +1523,7 @@ async function triggerMatchSearch(){
       var d=new Date(date+'T12:00:00');
       d.setDate(d.getDate()-1);
       var date2=d.toISOString().slice(0,10);
-      var resp2=await fetch('https://v3.football.api-sports.io/fixtures?team='+_coriId+'&date='+date2,{
-        headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
-      });
+      var resp2=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures&params=team='+_coriId+'%26date='+date2);
       var data2=await resp2.json();
       fixtures=data2.response||[];
     }
@@ -1593,9 +1589,7 @@ async function fetchGoalsForFixtures(fixtures){
   for(var i=0;i<Math.min(fixtures.length,3);i++){
     var f=fixtures[i];
     try{
-      var resp=await fetch('https://v3.football.api-sports.io/fixtures/events?fixture='+f.fixture.id,{
-        headers:{'x-apisports-key':_apiKey,'x-apisports-host':'v3.football.api-sports.io'}
-      });
+      var resp=await fetch('https://hpjvpxqziianujoceaqa.supabase.co/functions/v1/football-proxy?endpoint=fixtures/events&params=fixture='+f.fixture.id);
       var data=await resp.json();
       var events=data.response||[];
       var goals=events
