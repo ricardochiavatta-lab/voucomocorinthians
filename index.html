@@ -712,8 +712,10 @@ async function loadPessoas(){
 }
 
 async function saveGameToDB(entry){
-  if(!currentUser) return null;
+  if(!currentUser){toast('❌ Você precisa estar logado para salvar.');return null;}
   var sp=getSupa();
+  // Ensure user_id is set correctly
+  if(!entry.user_id) entry.user_id=currentUser.id;
   var row={user_id:currentUser.id,mandante:entry.mandante,visitante:entry.visitante,
     gp:entry.gp,gc:entry.gc,adversario:entry.adversario,casa:entry.casa,res:entry.res,
     camp:entry.camp,data:entry.data,ano:entry.ano,estadio:entry.estadio,setor:entry.setor,
@@ -724,7 +726,11 @@ async function saveGameToDB(entry){
   }else{
     res=await sp.from('jogos').insert(row).select();
   }
-  if(res.error){console.error(res.error);return null;}
+  if(res.error){
+    console.error('saveGameToDB error:', res.error);
+    toast('Erro ao salvar: '+res.error.message+' (código: '+res.error.code+')');
+    return null;
+  }
   return res.data&&res.data[0]||null;
 }
 
@@ -1107,9 +1113,14 @@ function saveGame(){
   if(editId){var idx=games.findIndex(function(g){return String(g.id)===String(editId)||String(g._db_id)===String(editId);});if(idx>=0)games[idx]=entry;}
   closeOverlay('form-modal');
   saveGameToDB(entry).then(function(saved){
-    if(saved&&!editId){entry._db_id=saved.id;entry.id=saved.id;if(!editId)games.push(entry);}
-    renderAll();
-    toast(editId?'Jogo atualizado! ✅':'Novo jogo adicionado! ⚽');
+    if(saved){
+      if(!editId){entry._db_id=saved.id;entry.id=saved.id;games.push(entry);}
+      else{var idx2=games.findIndex(function(g){return String(g.id)===String(editId)||String(g._db_id)===String(editId);});if(idx2>=0)games[idx2]=entry;}
+      renderAll();
+      toast(editId?'Jogo atualizado! ✅':'Novo jogo adicionado! ⚽');
+    } else {
+      toast('❌ Falha ao salvar. Verifique sua conexão e tente novamente.');
+    }
   });
 }
 function delGame(id){
