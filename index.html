@@ -405,15 +405,30 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="modal-x" onclick="closeOverlay('form-modal')">&#x2715;</button>
     </div>
     <div class="form-grid">
-      <div class="fg">
-          <label class="lbl">Data</label>
-          <div style="display:flex;gap:.4rem;align-items:center">
-            <input type="date" class="inp" id="f-data" onchange="onFormDateChange()" style="flex:1">
-            <button type="button" onclick="openYearSearch()" title="Buscar por ano" style="background:var(--card);border:1px solid var(--border);border-radius:5px;padding:.4rem .6rem;cursor:pointer;font-size:.8rem;color:var(--muted);transition:all .2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🔎 Buscar</button>
+      <!-- SEARCH PANEL (always visible at top) -->
+      <div class="fg full" id="search-section">
+        <div style="display:flex;gap:.4rem;align-items:flex-end;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:.3rem;flex:0 0 90px">
+            <label class="lbl">Ano</label>
+            <input type="number" class="inp" id="ys-ano" placeholder="2025" min="2020" max="2030" style="width:90px">
           </div>
+          <div style="display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:120px">
+            <label class="lbl">Adversário</label>
+            <input type="text" class="inp" id="ys-adv" placeholder="Ex: Palmeiras" autocomplete="off" onkeydown="if(event.key==='Enter')runYearSearch()">
+          </div>
+          <button type="button" onclick="runYearSearch()" class="btn-save" style="padding:.5rem 1rem;height:38px">🔎 Buscar</button>
         </div>
-      <div class="fg"><label class="lbl">Competição</label><input type="text" class="inp" id="f-campeonato" placeholder="Ex: Brasileiro" list="dl-camp"><datalist id="dl-camp"></datalist></div>
-      <div class="fg full">
+        <div id="ys-results" style="margin-top:.5rem"></div>
+      </div>
+      <!-- DIVIDER -->
+      <div class="fg full" id="manual-section" style="display:none">
+        <div style="border-top:1px solid var(--border);padding-top:.75rem;margin-top:.25rem">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;text-align:center">Ou preencha manualmente:</div>
+        </div>
+      </div>
+      <div class="fg" id="field-data" style="display:none"><label class="lbl">Data</label><input type="date" class="inp" id="f-data" onchange="onFormDateChange()"></div>
+      <div class="fg" id="field-camp" style="display:none"><label class="lbl">Competição</label><input type="text" class="inp" id="f-campeonato" placeholder="Ex: Brasileiro" list="dl-camp"><datalist id="dl-camp"></datalist></div>
+      <div class="fg full" id="field-teams">
         <label class="lbl">Times e Placar</label>
         <div class="teams-row">
           <input type="text" class="inp" id="f-mandante" placeholder="Mandante" oninput="previewTeamLogo(this,'prev-mand')" autocomplete="off">
@@ -434,7 +449,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div id="match-results"></div>
         </div>
       </div>
-      <div class="fg"><label class="lbl">Estádio</label><input type="text" class="inp" id="f-estadio" placeholder="Nome do estádio" list="dl-est"><datalist id="dl-est"></datalist></div>
+      <div class="fg" id="field-estadio"><label class="lbl">Estádio</label><input type="text" class="inp" id="f-estadio" placeholder="Nome do estádio" list="dl-est"><datalist id="dl-est"></datalist></div>
       <div class="fg"><label class="lbl">Setor</label><input type="text" class="inp" id="f-setor" placeholder="Ex: Leste Inferior"></div>
       <div class="fg full">
         <label class="lbl">Gols do Corinthians ⚽</label>
@@ -1089,6 +1104,14 @@ function openForm(){
   document.getElementById('f-setor').value='';
   pendBadges=[];pendPessoas=[];
   refreshGolsArea();refreshBadgesUI();refreshPessoasCheckUI();
+  // Reset search fields
+  var anoEl=document.getElementById('ys-ano');
+  var advEl=document.getElementById('ys-adv');
+  var ysR=document.getElementById('ys-results');
+  if(anoEl) anoEl.value='';
+  if(advEl) advEl.value='';
+  if(ysR) ysR.innerHTML='';
+  hideManualFields();
   openOverlay('form-modal');
 }
 function editGame(id){
@@ -1105,6 +1128,11 @@ function editGame(id){
   document.getElementById('f-estadio').value=g.estadio||'';
   document.getElementById('f-setor').value=g.setor||'';
   refreshGolsArea();refreshBadgesUI();refreshPessoasCheckUI();
+  // When editing, show all fields directly
+  showManualFields();
+  // Hide search section when editing
+  var ss=document.getElementById('search-section');
+  if(ss) ss.style.display='none';
   openOverlay('form-modal');
 }
 function promptGol(){
@@ -1634,11 +1662,12 @@ function applyMatchByIndex(idx){
   if(!f) return;
   var matchData={
     home:f.teams.home.name, away:f.teams.away.name,
-    gh:f._local?(f._casa?f._gp:f._gc):( f.goals.home!==null?f.goals.home:'?'),
-    ga:f._local?(f._casa?f._gc:f._gp):( f.goals.away!==null?f.goals.away:'?'),
+    gh:f._local?(f._casa?f._gp:f._gc):(f.goals.home!==null?f.goals.home:'?'),
+    ga:f._local?(f._casa?f._gc:f._gp):(f.goals.away!==null?f.goals.away:'?'),
     league:f.league.name,
     venue:f.fixture.venue.name||'',
-    goals:f._goals||[]
+    goals:f._goals||[],
+    date:f.fixture.date||''
   };
   applyMatch(matchData);
 }
@@ -1674,9 +1703,21 @@ function applyMatch(matchData){
   
   closeMatchPanel();
   
+  // Show all manual fields (populated by the match data)
+  showManualFields();
+  
+  // Fill date from match data
+  if(matchData.date||matchData.fixture_date){
+    var dt=matchData.date||matchData.fixture_date;
+    var dateEl=document.getElementById('f-data');
+    if(dateEl&&dt) dateEl.value=dt;
+  }
+  
   // Preview logos
-  previewTeamLogo(document.getElementById('f-mandante'),'prev-mand');
-  previewTeamLogo(document.getElementById('f-visitante'),'prev-visit');
+  var mandEl=document.getElementById('f-mandante');
+  var visEl=document.getElementById('f-visitante');
+  if(mandEl) previewTeamLogo(mandEl,'prev-mand');
+  if(visEl) previewTeamLogo(visEl,'prev-visit');
   
   toast('✅ Partida aplicada! Confira e salve.');
 }
@@ -1747,48 +1788,33 @@ function renderLocalMatches(matches, resultsEl){
 
 
 // ── BUSCA POR ANO + ADVERSÁRIO ──
-async function openYearSearch(){
-  var advEl=document.getElementById('f-visitante');
-  var adv=advEl?advEl.value.trim():'';
-  
-  // Show a small inline search above the panel
-  var panel=document.getElementById('match-search-panel');
-  var results=document.getElementById('match-results');
-  if(!panel||!results) return;
-  
-  panel.classList.add('visible');
-  results.innerHTML=`
-    <div style="display:flex;gap:.4rem;margin-bottom:.6rem;flex-wrap:wrap">
-      <input id="ys-ano" type="number" placeholder="Ano (ex: 2025)" min="2020" max="2030" 
-        class="inp" style="width:100px" value="${new Date().getFullYear()}">
-      <input id="ys-adv" type="text" placeholder="Adversário" class="inp" style="flex:1" value="${esc(adv)}">
-      <button onclick="runYearSearch()" class="btn-use-match" style="padding:.4rem .9rem">Buscar</button>
-    </div>
-    <div id="ys-results"></div>
-  `;
-}
+// openYearSearch removed - search is now inline in form
 
 async function runYearSearch(){
-  var ano=document.getElementById('ys-ano')&&document.getElementById('ys-ano').value;
-  var adv=document.getElementById('ys-adv')&&document.getElementById('ys-adv').value.trim();
+  var anoEl=document.getElementById('ys-ano');
+  var advEl=document.getElementById('ys-adv');
   var ysR=document.getElementById('ys-results');
   if(!ysR) return;
+  
+  var ano=anoEl&&anoEl.value?parseInt(anoEl.value):null;
+  var adv=advEl?advEl.value.trim():'';
+  
   if(!ano){ysR.innerHTML='<div class="api-search-status">Informe o ano.</div>';return;}
   
   ysR.innerHTML='<div class="api-search-status">⏳ Buscando...</div>';
   
   var sp=getSupa(); if(!sp) return;
-  var query=sp.from('jogos_base').select('*').eq('ano', parseInt(ano));
-  
-  if(adv&&adv.length>=2){
-    // Filter by adversary (ilike for partial match)
-    query=query.ilike('adversario','%'+adv+'%');
-  }
+  var query=sp.from('jogos_base').select('*').eq('ano', ano);
+  if(adv&&adv.length>=2) query=query.ilike('adversario','%'+adv+'%');
   
   var {data,error}=await query.order('data',{ascending:false});
   
   if(error||!data||!data.length){
-    ysR.innerHTML='<div class="api-search-status">Nenhuma partida encontrada para esses filtros.</div>';
+    ysR.innerHTML='<div class="api-search-status" style="text-align:center">'
+      +'😕 Ops, nenhum jogo encontrado!<br>'
+      +'<span style="font-size:.72rem">Faça o lançamento manual abaixo.</span></div>';
+    // Show manual fields
+    showManualFields();
     return;
   }
   
@@ -1817,6 +1843,23 @@ async function runYearSearch(){
       +'<button class="btn-use-match">Usar</button>'
       +'</div>';
   }).join('');
+}
+
+
+function showManualFields(){
+  var ids=['manual-section','field-data','field-camp','field-teams','field-estadio'];
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display='';
+  });
+}
+
+function hideManualFields(){
+  var ids=['manual-section','field-data','field-camp','field-teams','field-estadio'];
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
 }
 
 function renderEstadios(){
